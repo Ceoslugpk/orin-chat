@@ -11,6 +11,10 @@ import FloatingVue from 'floating-vue';
 import WootUiKit from 'dashboard/components';
 import App from 'dashboard/App.vue';
 import i18nMessages from 'dashboard/i18n';
+import {
+  createBrandedPostTranslation,
+  installationNameFromWindow,
+} from 'shared/helpers/brandedTranslation';
 import createAxios from 'dashboard/helper/APIHelper';
 
 import commonHelpers, { isJSONValid } from 'dashboard/helper/commons';
@@ -39,6 +43,7 @@ const i18n = createI18n({
   locale: 'en',
   fallbackLocale: 'en',
   messages: i18nMessages,
+  postTranslation: createBrandedPostTranslation(installationNameFromWindow()),
 });
 
 sync(store, router);

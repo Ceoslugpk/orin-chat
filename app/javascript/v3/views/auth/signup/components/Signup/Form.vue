@@ -71,6 +71,10 @@ const termsLink = computed(() =>
 
 const sanitizedTermsLink = computed(() => DOMPurify.sanitize(termsLink.value));
 
+const hasTermsLinks = computed(() =>
+  Boolean(globalConfig.value.termsURL && globalConfig.value.privacyURL)
+);
+
 const allowedLoginMethods = computed(
   () => window.chatwootConfig.allowedLoginMethods || ['email']
 );
@@ -199,6 +203,7 @@ const onCaptchaError = () => {
       {{ $t('REGISTER.OAUTH.GOOGLE_SIGNUP') }}
     </GoogleOAuthButton>
     <p
+      v-if="hasTermsLinks"
       class="text-sm mt-5 mb-0 text-n-slate-11 [&>a]:text-n-blue-10 [&>a]:font-medium [&>a]:hover:text-n-blue-11"
       v-html="sanitizedTermsLink"
     />

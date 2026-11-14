@@ -1,5 +1,6 @@
 <%
   version = Chatwoot.config[:version]
+  installation_name = GlobalConfig.get_value("INSTALLATION_NAME").presence || "Orin Chat"
   # Set by a future opt-in Orin Chat release check; empty until then.
   latest_version = begin
     Redis::Alfred.get(Redis::Alfred::LATEST_CHATWOOT_VERSION).presence
@@ -12,8 +13,8 @@
   <%= link_to image_tag("/brand-assets/logo_thumbnail.svg", alt: "", class: "size-8"), super_admin_root_path, class: "shrink-0", tabindex: -1, aria: { hidden: true } %>
   <div class="min-w-0 whitespace-nowrap">
     <div class="flex items-baseline gap-1.5 leading-5">
-      <%= link_to "Chatwoot", super_admin_root_path, class: "text-sm font-medium text-n-slate-12" %>
-      <%= link_to "https://github.com/chatwoot/chatwoot/releases/tag/v#{version}",
+      <%= link_to installation_name, super_admin_root_path, class: "text-sm font-medium text-n-slate-12" %>
+      <%= link_to "https://github.com/Ceoslugpk/orin-chat/releases",
                   target: "_blank", rel: "noopener noreferrer",
                   title: update_available ? t("super_admin.navigation.update_available", version: latest_version) : t("super_admin.navigation.release_notes"),
                   class: "inline-flex items-center gap-1 text-label-small tabular-nums text-n-slate-10 transition-colors hover:text-n-slate-12 hover:underline" do %>

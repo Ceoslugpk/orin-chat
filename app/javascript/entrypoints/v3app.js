@@ -2,6 +2,10 @@ import { createApp } from 'vue';
 import { createI18n } from 'vue-i18n';
 
 import i18nMessages from 'dashboard/i18n';
+import {
+  createBrandedPostTranslation,
+  installationNameFromWindow,
+} from 'shared/helpers/brandedTranslation';
 import * as Sentry from '@sentry/vue';
 import {
   initializeAnalyticsEvents,
@@ -22,6 +26,7 @@ const i18n = createI18n({
   locale: 'en',
   fallbackLocale: 'en',
   messages: i18nMessages,
+  postTranslation: createBrandedPostTranslation(installationNameFromWindow()),
 });
 
 const app = createApp(App);

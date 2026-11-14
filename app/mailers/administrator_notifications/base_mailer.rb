@@ -28,4 +28,8 @@ class AdministratorNotifications::BaseMailer < ApplicationMailer
   def liquid_locals
     super.merge({ meta: @meta })
   end
+
+  def brand_name
+    GlobalConfig.get_value('BRAND_NAME').presence || 'Orin Chat'
+  end
 end
