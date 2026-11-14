@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Run a command inside the Orin Chat development toolbox container.
+#
+#   bin/toolbox bundle exec rspec spec/models/account_spec.rb
+#   bin/toolbox pnpm test
+#
+# Works with podman or docker. The repo is mounted at /app, gems and caches
+# live in the "orin-toolbox-cache" volume, and the container uses the host
+# network so it can reach PostgreSQL and Redis on localhost.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+IMAGE="orin-chat-toolbox:latest"
+ENGINE="$(command -v podman || command -v docker)"
+
+if ! "$ENGINE" image exists "$IMAGE" 2>/dev/null && ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
+  "$ENGINE" build -t "$IMAGE" -f "$ROOT/docker/dockerfiles/toolbox.Dockerfile" "$ROOT/docker"
+fi
+
+USER_ARGS=(--user "$(id -u):$(id -g)")
+VOLUME_SUFFIX=""
+if [[ "$(basename "$ENGINE")" == "podman" ]]; then
+  USER_ARGS=(--userns=keep-id)
+  VOLUME_SUFFIX=":U"
+fi
+
+TTY_ARGS=()
+[[ -t 0 && -t 1 ]] && TTY_ARGS=(-it)
+
+exec "$ENGINE" run --rm "${TTY_ARGS[@]}" "${USER_ARGS[@]}" \
+  --network host \
+  -v "$ROOT:/app:z" \
+  -v "orin-toolbox-cache:/bundle$VOLUME_SUFFIX" \
+  --env-file <(grep -v '^\s*#' "$ROOT/.env" 2>/dev/null | grep '=' || true) \
+  -e HOME=/bundle/home \
+  "$IMAGE" sh -c 'mkdir -p "$HOME" && exec "$@"' toolbox "$@"
