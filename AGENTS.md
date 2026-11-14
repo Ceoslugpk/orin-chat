@@ -1,10 +1,20 @@
-# Chatwoot Development Guidelines
+# Orin Chat Development Guidelines
+
+Orin Chat is an AGPL-3.0, self-hostable customer support platform forked from Chatwoot's MIT core.
 
 `CLAUDE.md` is a symlink to this file. Keep shared, repository-wide instructions here and detailed procedures in linked docs. Add nested `AGENTS.md` files only for subtree-specific differences; avoid duplicating root rules.
 
+## Licensing and Clean-Room Rules
+
+- Never add code, specs, or assets from Chatwoot's proprietary `enterprise/` directory, and never read that code while implementing a feature. Features Chatwoot ships only in `enterprise/` (SLA, custom roles, SAML, audit logs, AI assistant, capacity limits, large campaigns, billing) are re-implemented from public product behaviour and documentation only.
+- Chatwoot MIT code outside `enterprise/` (including dashboard UI for those features) may be reused and modified; keep `LICENSE-CHATWOOT` and `NOTICE` intact.
+- Orin Chat must not send telemetry or data to third parties by default. Any outbound integration must be opt-in and documented.
+- Keep internal identifiers (`ChatwootApp`, `Chatwoot` config, env var names, `db:chatwoot_prepare`, API paths) unchanged so upstream Chatwoot fixes can be merged. Rebrand user-facing text, assets, and docs only.
+
 ## Build, Test, and Lint
 
-- **Ruby setup**: Use the version in `.ruby-version` through `rbenv`. Before Ruby commands, run `eval "$(rbenv init -)"`; use `bundle exec` for Rails, RSpec, and RuboCop.
+- **Toolchain**: `mise` manages Ruby, Node, and pnpm from `.mise.toml` / `.ruby-version`. Use `bundle exec` for Rails, RSpec, and RuboCop.
+- **Services**: PostgreSQL with pgvector and Redis (local containers: `orin-postgres`, `orin-redis`, `orin-mailhog`).
 - **Install dependencies**: `bundle install && pnpm install`
 - **Run development**: `pnpm dev` or `overmind start -f Procfile.dev`
 - **Lint Ruby**: `bundle exec rubocop <changed Ruby files>`; use autocorrection only when intended and inspect its diff.
@@ -26,7 +36,7 @@
 
 - Add an npm package, Ruby gem, or other dependency only when necessary. Reuse existing maintained dependencies, standard-library capabilities, or shared utilities first; explain why they or a small, maintainable implementation cannot reasonably meet the requirement.
 - Before adding a dependency, verify current upstream maintenance, release activity, community/support health, and security advisories and patch responsiveness. Do not introduce abandoned or unmaintained packages. Prefer a small, readable implementation for behavior we can reasonably own; continue to use maintained, proven libraries for protocol, authentication, and signing rather than hand-rolling them.
-- Before upgrading, read release notes, changelogs, and migration guides across the full version jump. Audit every call site, wrapper, configuration, and indirect integration, including framework usage and affected OSS/Enterprise paths, for changed APIs, defaults, error behavior, and deprecations. Update affected code and tests together.
+- Before upgrading, read release notes, changelogs, and migration guides across the full version jump. Audit every call site, wrapper, configuration, and indirect integration, including framework usage, for changed APIs, defaults, error behavior, and deprecations. Update affected code and tests together.
 - Verify runtime/framework, peer, and transitive dependency compatibility; inspect manifest and lockfile changes for unintended upgrades. Run focused behavior and integration checks across all affected surfaces to establish compatibility. A successful install or a minor/patch version label is not sufficient evidence that an upgrade is safe.
 
 ## Rails, Validation, and Database Queries
@@ -46,8 +56,8 @@
 ## Tests and Validation
 
 - Add or update meaningful tests for customer-facing behavior and underlying model, service, job, API, or state changes. Cover the intended success path and relevant failures, permissions, and lifecycle transitions; use enough coverage to establish the behavior, not just the implementation shape.
-- For new or changed functionality, map and test every affected surface and consumer, including dashboard, widget/SDKs, APIs, jobs, integrations, real-time events, and OSS/Enterprise paths where relevant. Include shared behavior outside the edited files. Explicitly check whether Super Admin screens, configuration, permissions, or management actions need corresponding changes, and implement and test them when required.
-- For a bug fix, add a focused regression that fails for the original behavior and passes with the fix. For core/Enterprise changes, cover the affected edition paths.
+- For new or changed functionality, map and test every affected surface and consumer, including dashboard, widget/SDKs, APIs, jobs, integrations, and real-time events where relevant. Include shared behavior outside the edited files. Explicitly check whether Super Admin screens, configuration, permissions, or management actions need corresponding changes, and implement and test them when required.
+- For a bug fix, add a focused regression that fails for the original behavior and passes with the fix.
 - Avoid tests that merely repeat migration declarations, configuration, formatting, or other mechanical changes. Test migration/backfill transformations when they carry meaningful data behavior, and verify operational migration safety separately.
 - Run focused specs and linters after code changes. For documentation-only changes, check formatting, links, and the diff. Report checks actually run and any remaining validation gaps.
 - Prefer `let` values and direct per-example setup; introduce custom spec helpers only when they remove meaningful repetition or complexity.
@@ -57,7 +67,7 @@
 ## Code Review Rules
 
 - Apply these checks during implementation and PR review. Report concrete regressions on supported paths, with the trigger, impact, and evidence; distinguish intended behavior from defects. Leave formatting and lint-only findings to CI.
-- Name the affected behavior and trace entry points, source of truth, side effects, and consumers across APIs, jobs, supported clients, and Enterprise overlays.
+- Name the affected behavior and trace entry points, source of truth, side effects, and consumers across APIs, jobs, and supported clients.
 - Inspect unchanged helpers reached by new callers or defaults. Treat valid `false` configuration distinctly from missing values; check repeated reads, cache invalidation, and disabled-feature work.
 - Bound database/Redis work, fanout, retries, scheduled jobs, and lock/connection hold time at representative production scale. Green unit tests or the existence of an index do not establish capacity.
 - Exercise relevant sequences such as failure → success → failure, new events while quota-held, clock boundaries, and rollback with existing state. Assert exact required values, not merely that something changed.
@@ -78,14 +88,12 @@
 
 - Use i18n for user-facing strings; no bare strings in templates. For product/source-string changes, update only backend `en.yml` and frontend `en.json`; Crowdin and the community handle other locales.
 - Crowdin-generated sync PRs may update non-English files; do not flag that alone. Verify that product/brand names, OAuth scopes, API values, and other machine-readable identifiers remain unchanged unless an official localized form exists. Keep newly introduced protected terms in the Crowdin glossary as non-translatable.
-- For UI strings that should adapt to branded/self-hosted installations, use `replaceInstallationName` from `shared/composables/useBranding` instead of hardcoded Chatwoot copy.
+- For UI strings that should adapt to branded/self-hosted installations, use `replaceInstallationName` from `shared/composables/useBranding` instead of hardcoded product names.
 
-## Enterprise Compatibility
+## Upstream Compatibility
 
-- Before changing core logic or public APIs, search both `app/` and `enterprise/` for related implementations. Keep request/response contracts compatible and mirror shared-code renames/moves where needed.
-- Extend existing OSS functionality for Enterprise through modules (`prepend_mod_with` / `include_mod_with`), hooks, flags, or configuration instead of hardcoding plan/instance-specific behavior in OSS. Put Enterprise-exclusive functionality under `enterprise/`.
-- For new endpoints, services, and models, consider the extension points Enterprise needs to avoid hard forks. Put Enterprise specs under `spec/enterprise`, mirroring OSS layout where applicable.
-- Follow the [Enterprise development handbook](https://chatwoot.help/hc/handbook/articles/developing-enterprise-edition-features-38).
+- Orin Chat merges Chatwoot releases periodically. Prefer extending upstream code through modules, concerns, and new files over editing upstream files in place, so merges stay small.
+- Orin Chat has no paid edition: every feature is available to every installation. Do not add plan gating.
 
 ## AI Models
 
@@ -100,8 +108,7 @@
 ## Commits and Pull Requests
 
 - Prefer Conventional Commits: `type(scope): subject` (scope optional). Do not reference Claude in commit messages.
-- Every PR must link an associated Linear ticket. Confirm an existing ticket or create the appropriate ticket before opening the PR; do not invent issue references.
-- For medium/large features (for example, a new workflow or a change spanning several layers), link the design/PRD/implementation artifact in both the Linear ticket and the PR. Keep those links and the description aligned with the final scope.
-- Start the PR description with a short, user-facing explanation of the change. Add a `Closes` section with the Linear ticket and any relevant GitHub issues.
+- For medium/large features (for example, a new workflow or a change spanning several layers), link the design/implementation document in the PR and keep it aligned with the final scope.
+- Start the PR description with a short, user-facing explanation of the change. Add a `Closes` section with any relevant GitHub issues; do not invent issue references.
 - Follow applicable repository-template sections. For features, include product/UX `How to test` steps; for bug fixes, include `How to reproduce` when useful. Add `What changed` only when it helps review.
 - Do not add a `How this was tested` section listing specs/commands; report automated validation in the task handoff instead.

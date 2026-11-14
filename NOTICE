@@ -1,0 +1,19 @@
+Orin Chat
+Copyright (c) 2026 Orin Chat contributors
+
+Orin Chat is licensed under the GNU Affero General Public License v3.0
+(see LICENSE).
+
+This project is a fork of Chatwoot (https://github.com/chatwoot/chatwoot).
+Code originating from Chatwoot is Copyright (c) 2017-2026 Chatwoot Inc. and
+is licensed under the MIT license; its original license text, including the
+copyright and permission notice, is preserved in LICENSE-CHATWOOT.
+
+Orin Chat does not include, and must not include, any content from Chatwoot's
+proprietary "enterprise/" directory. Features that Chatwoot ships only in that
+directory are re-implemented independently in this project.
+
+"Chatwoot" is a trademark of Chatwoot Inc. Orin Chat is an independent project
+and is not affiliated with or endorsed by Chatwoot Inc.
+
+Third-party components keep their original licenses.
