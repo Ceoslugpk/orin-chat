@@ -1,4 +1,9 @@
-# TODO: lets use HTTParty instead of RestClient
+# Installation identity and the optional mobile push relay.
+#
+# Orin Chat does not contact Chatwoot's hub for version checks, instance
+# registration, telemetry or billing. The only remaining hub call is the push
+# relay, used to deliver notifications to Chatwoot's mobile apps; it is off
+# unless ENABLE_PUSH_RELAY_SERVER=true and no Firebase credentials are set.
 class ChatwootHub
   DEFAULT_BASE_URL = 'https://hub.2.chatwoot.com'.freeze
 
@@ -6,34 +11,14 @@ class ChatwootHub
     DEFAULT_BASE_URL
   end
 
-  def self.ping_url
-    "#{base_url}/ping"
-  end
-
-  def self.registration_url
-    "#{base_url}/instances"
-  end
-
   def self.push_notification_url
     "#{base_url}/send_push"
-  end
-
-  def self.events_url
-    "#{base_url}/events"
-  end
-
-  def self.billing_base_url
-    "#{base_url}/billing"
   end
 
   def self.installation_identifier
     identifier = InstallationConfig.find_by(name: 'INSTALLATION_IDENTIFIER')&.value
     identifier ||= InstallationConfig.create!(name: 'INSTALLATION_IDENTIFIER', value: SecureRandom.uuid).value
     identifier
-  end
-
-  def self.billing_url
-    "#{billing_base_url}?installation_identifier=#{installation_identifier}"
   end
 
   def self.pricing_plan
@@ -66,46 +51,6 @@ class ChatwootHub
     }
   end
 
-  def self.instance_metrics
-    {
-      accounts_count: fetch_count(Account),
-      users_count: fetch_count(User),
-      inboxes_count: fetch_count(Inbox),
-      conversations_count: fetch_count(Conversation),
-      incoming_messages_count: fetch_count(Message.incoming),
-      outgoing_messages_count: fetch_count(Message.outgoing),
-      additional_information: {}
-    }
-  end
-
-  def self.fetch_count(model)
-    model.last&.id || 0
-  end
-
-  def self.sync_with_hub(refresh_billing: false)
-    begin
-      info = instance_config
-      info[:refresh_billing] = true if refresh_billing
-      info = info.merge(instance_metrics) unless ENV['DISABLE_TELEMETRY']
-      response = RestClient.post(ping_url, info.to_json, { content_type: :json, accept: :json })
-      parsed_response = JSON.parse(response)
-    rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
-      Rails.logger.error "Exception: #{e.message}"
-    rescue StandardError => e
-      ChatwootExceptionTracker.new(e).capture_exception
-    end
-    parsed_response
-  end
-
-  def self.register_instance(company_name, owner_name, owner_email)
-    info = { company_name: company_name, owner_name: owner_name, owner_email: owner_email, subscribed_to_mailers: true }
-    RestClient.post(registration_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
-  rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
-    Rails.logger.error "Exception: #{e.message}"
-  rescue StandardError => e
-    ChatwootExceptionTracker.new(e).capture_exception
-  end
-
   def self.send_push(fcm_options)
     send_push_with_response(fcm_options)
   rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
@@ -117,17 +62,6 @@ class ChatwootHub
   def self.send_push_with_response(fcm_options)
     info = { fcm_options: fcm_options }
     RestClient.post(push_notification_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
-  end
-
-  def self.emit_event(event_name, event_data)
-    return if ENV['DISABLE_TELEMETRY']
-
-    info = { event_name: event_name, event_data: event_data }
-    RestClient.post(events_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
-  rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
-    Rails.logger.error "Exception: #{e.message}"
-  rescue StandardError => e
-    ChatwootExceptionTracker.new(e).capture_exception
   end
 end
 

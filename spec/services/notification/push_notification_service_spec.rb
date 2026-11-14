@@ -43,6 +43,27 @@ describe Notification::PushNotificationService do
     end
   end
 
+  context 'when firebase credentials are not configured' do
+    before do
+      allow(GlobalConfigService).to receive(:load).and_call_original
+      allow(GlobalConfigService).to receive(:load).with('FIREBASE_PROJECT_ID', nil).and_return(nil)
+      allow(ChatwootHub).to receive(:send_push)
+      create(:notification_subscription, user: notification.user, subscription_type: 'fcm')
+    end
+
+    it 'does not relay the notification through the Chatwoot hub by default' do
+      described_class.new(notification: notification).perform
+      expect(ChatwootHub).not_to have_received(:send_push)
+    end
+
+    it 'relays the notification through the Chatwoot hub when opted in' do
+      with_modified_env ENABLE_PUSH_RELAY_SERVER: 'true' do
+        described_class.new(notification: notification).perform
+        expect(ChatwootHub).to have_received(:send_push)
+      end
+    end
+  end
+
   context 'when the push server returns error' do
     it 'sends webpush notifications for webpush subscription' do
       with_modified_env VAPID_PUBLIC_KEY: 'test' do

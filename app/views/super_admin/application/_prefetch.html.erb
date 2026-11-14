@@ -9,7 +9,7 @@ it opens without a wait. Links that act on GET or leave the page are left out.
       where: {
         and: [
           { href_matches: [super_admin_root_path, "#{super_admin_root_path}/*"] },
-          { not: { href_matches: [super_admin_logout_path, refresh_super_admin_settings_path] } },
+          { not: { href_matches: [super_admin_logout_path] } },
           { not: { selector_matches: "[data-method], [target=_blank]" } }
         ]
       }

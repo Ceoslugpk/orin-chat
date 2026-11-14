@@ -1,6 +1,6 @@
 <%
   version = Chatwoot.config[:version]
-  # Internal::CheckNewVersionsJob keeps the newest release here.
+  # Set by a future opt-in Orin Chat release check; empty until then.
   latest_version = begin
     Redis::Alfred.get(Redis::Alfred::LATEST_CHATWOOT_VERSION).presence
   rescue Redis::BaseConnectionError
