@@ -104,6 +104,19 @@ export function extractChangedAccountUserValues(
     );
   }
 
+  if (
+    auditedChanges.agent_capacity_policy_id &&
+    auditedChanges.agent_capacity_policy_id.length
+  ) {
+    changes.push('agent_capacity_policy_id');
+    const policyId = extractAttrChange(auditedChanges.agent_capacity_policy_id);
+    values.push(
+      policyId === null || policyId === undefined
+        ? t('AUDIT_LOGS.ATTRIBUTES.AGENT_CAPACITY_POLICY_NONE')
+        : t('AUDIT_LOGS.ATTRIBUTES.AGENT_CAPACITY_POLICY', { id: policyId })
+    );
+  }
+
   return { changes, values };
 }
 

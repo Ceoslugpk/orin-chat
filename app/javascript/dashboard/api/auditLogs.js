@@ -10,6 +10,10 @@ class AuditLogs extends ApiClient {
   get(filters = {}) {
     return axios.get(this.url, { params: filters });
   }
+
+  download(filters = {}) {
+    return axios.get(`${this.url}/download`, { params: filters });
+  }
 }
 
 export default new AuditLogs();

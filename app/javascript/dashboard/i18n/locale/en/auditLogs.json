@@ -8,6 +8,8 @@
     "SEARCH_404": "There are no items matching this query",
     "SIDEBAR_TXT": "<p><b>Audit Logs</b></p><p>Audit logs record account activity in your support workspace.</p>",
     "COUNT": "{n} event | {n} events",
+    "DOWNLOAD": "Download CSV",
+    "DOWNLOAD_FAILED": "Could not download audit logs",
     "FILTERS": {
       "SEARCH_PLACEHOLDER": "Search by name or email",
       "ALL_EVENTS": "All events",
@@ -77,7 +79,9 @@
     "ATTRIBUTES": {
       "AUTO_OFFLINE_ON": "auto offline enabled",
       "AUTO_OFFLINE_OFF": "auto offline disabled",
-      "CUSTOM_ROLE_NONE": "no custom role"
+      "CUSTOM_ROLE_NONE": "no custom role",
+      "AGENT_CAPACITY_POLICY": "capacity policy #{id}",
+      "AGENT_CAPACITY_POLICY_NONE": "no capacity policy"
     },
     "INBOX": {
       "ADD": "{agentName} created a new inbox (#{id})",

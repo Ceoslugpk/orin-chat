@@ -7,7 +7,9 @@ Audit Logs is an open-source feature with no subscription requirement. Its API a
 - Successful user sign-ins and sign-outs, associated with each account the user belongs to. Super Admin impersonation sessions are excluded from the target user's own sign-in/sign-out trail; the existing impersonation logger records those sessions separately.
 - Account settings updates, excluding internal attributes.
 - Inbox, webhook, team, automation-rule and macro create/update/delete events. Webhook secrets are excluded.
-- Account-agent creation/removal and selected membership/permission/availability changes; routine `active_at` updates are excluded.
+- Account-agent creation/removal and selected membership/permission/availability
+  changes, including custom role and agent capacity policy assignment; routine
+  `active_at` updates are excluded.
 - Inbox and team membership creation/removal.
 - Direct conversation deletions, including the conversation's display ID, and message soft deletions. Message content and attachments are not copied into these explicit deletion events.
 
@@ -27,7 +29,21 @@ Supported filters:
 | `since`, `until` | Inclusive Unix timestamp range; supply both in ascending order |
 | `q` | Search text, at most 100 characters; matches actor name/email, recorded username, event type/action or remote address |
 
-Invalid supported filter shapes/values return 422. The response contains `audit_logs`, `current_page`, `per_page` and `total_entries`. It does not serialize full user, inbox or webhook records. Actor searches remain inside the account-scoped audit relation.
+Invalid supported filter shapes/values return 422. The response contains
+`audit_logs`, `current_page`, `per_page` and `total_entries`. It does not serialize full user, inbox or webhook records. Actor searches remain inside the account-scoped audit relation.
+
+`GET /api/v1/accounts/:account_id/audit_logs/download` returns the same
+filtered set as CSV (up to 10,000 rows), with timestamp, actor, action,
+record type/id, changes JSON, IP address and location. The dashboard exposes
+the download from the Audit Logs header.
+
+## Retention
+
+Retention is opt-in. Set the installation config
+`AUDIT_LOG_RETENTION_DAYS` to a positive number to enable daily deletion of
+older audit rows; blank or non-positive values keep logs indefinitely. The
+`AuditLog::RetentionJob` runs daily at 03:30 UTC. There is no automatic
+retention by default.
 
 ## Deletion and background-job consistency
 
@@ -49,10 +65,13 @@ That task does not backfill existing accounts. Core API authorization is always 
 
 ## Verification and limits
 
-Focused backend tests cover tenant/role/bot access, actor search, filter handling, impersonation attribution, audit context, direct deletion rollback and membership deletion history. Frontend tests cover event payloads/action keys, filters, branding, policy and signup behavior. Run these checks on the assembled checkout rather than treating earlier source-worktree results as integration evidence. The installer guard has a separate local-stub test at `deployment/tests/upgrade_test.sh`; it never runs the production installer.
+Focused backend tests cover tenant/role/bot access, actor search, filter handling, impersonation attribution, audit context, direct deletion rollback, membership deletion history, CSV export and opt-in retention. Frontend tests cover event payloads/action keys, filters, branding, policy and signup behavior. Run these checks on the assembled checkout rather than treating earlier source-worktree results as integration evidence. The installer guard has a separate local-stub test at `deployment/tests/upgrade_test.sh`; it never runs the production installer.
 
 Local browser smoke checks exercised the real signup route on desktop/mobile, dashboard login, actor-email audit search/filter clearing and Super Admin included/planned presentation. A missing fallback favicon found during those checks was added from the existing Orin icon.
 
 A local PostgreSQL probe used 50,000 synthetic audit rows across two tenants, with 45,000 rows assigned to the selected tenant. Executed page and actor-search plans used indexes; the unfiltered tenant count used a sequential scan. One warm run measured approximately 0.6 ms for a page, 0.9 ms for actor search and 6.2 ms for the count. Synthetic inserts were rolled back. These figures do not establish production capacity: high offsets, larger histories, many users, selective contains-text searches, cold caches and count costs still need workload-specific measurement.
 
-Remaining feature coverage includes readable descriptions for every selected account-membership field (beyond role/availability and removal), plus broader lifecycle/concurrency inventory. No retention/export policy or production-scale capacity guarantee is introduced here. Production installer and backup/restore validation remain separate self-hosting work.
+Remaining operational work is workload-specific production validation (large
+histories, high offsets, cold caches and contains-text searches) and
+operator-side retention/export policy choices. No retention period is applied
+unless configured, and exports are capped at 10,000 rows per request.

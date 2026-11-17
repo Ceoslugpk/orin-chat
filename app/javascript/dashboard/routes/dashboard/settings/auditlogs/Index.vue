@@ -16,6 +16,11 @@ import PaginationFooter from 'dashboard/components-next/pagination/PaginationFoo
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import AuditLogFilters from './components/AuditLogFilters.vue';
+import AuditLogsAPI from 'dashboard/api/auditLogs';
+import {
+  generateFileName,
+  downloadCsvFile,
+} from 'dashboard/helper/downloadHelper';
 import {
   generateTranslationPayload,
   generateLogActionKey,
@@ -83,6 +88,25 @@ const clearFilters = () => {
   pushedSearch.value = '';
   searchQuery.value = '';
   router.push({ name: 'auditlogs_list', query: {} });
+};
+
+const isDownloading = ref(false);
+const downloadAuditLogs = async () => {
+  isDownloading.value = true;
+  try {
+    const response = await AuditLogsAPI.download(filters.value);
+    downloadCsvFile(
+      generateFileName({
+        type: 'audit-logs',
+        to: Math.floor(Date.now() / 1000),
+      }),
+      response.data
+    );
+  } catch (error) {
+    useAlert(t('AUDIT_LOGS.DOWNLOAD_FAILED'));
+  } finally {
+    isDownloading.value = false;
+  }
 };
 
 const generateLogText = auditLogItem => {
@@ -190,15 +214,27 @@ onMounted(() => {
             {{ $t('AUDIT_LOGS.COUNT', { n: meta.totalEntries }) }}
           </span>
         </template>
-        <template v-if="hasActiveFilters" #actions>
-          <Button
-            :label="$t('AUDIT_LOGS.FILTERS.CLEAR_ALL')"
-            icon="i-lucide-x"
-            slate
-            ghost
-            sm
-            @click="clearFilters"
-          />
+        <template #actions>
+          <div class="flex items-center gap-2">
+            <Button
+              :label="$t('AUDIT_LOGS.DOWNLOAD')"
+              icon="i-lucide-download"
+              slate
+              faded
+              sm
+              :is-loading="isDownloading"
+              @click="downloadAuditLogs"
+            />
+            <Button
+              v-if="hasActiveFilters"
+              :label="$t('AUDIT_LOGS.FILTERS.CLEAR_ALL')"
+              icon="i-lucide-x"
+              slate
+              ghost
+              sm
+              @click="clearFilters"
+            />
+          </div>
         </template>
       </BaseSettingsHeader>
     </template>

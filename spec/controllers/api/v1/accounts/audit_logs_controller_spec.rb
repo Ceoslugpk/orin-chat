@@ -133,4 +133,32 @@ RSpec.describe 'Audit Logs API', type: :request do
       end
     end
   end
+
+  describe 'GET /api/v1/accounts/{account.id}/audit_logs/download' do
+    it 'exports filtered audit logs as CSV for administrators only' do
+      inbox = create(:inbox, account: account)
+      inbox.update!(name: 'Exported Inbox')
+
+      get "#{url}/download", headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+
+      get "#{url}/download", headers: administrator.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.headers['Content-Type']).to include('text/csv')
+      expect(response.body).to include('Record Type', 'Inbox')
+      expect(response.body).to include(inbox.id.to_s)
+    end
+
+    it 'applies the same filters as the list endpoint' do
+      inbox = create(:inbox, account: account)
+      inbox.update!(name: 'Filtered Inbox')
+
+      get "#{url}/download", headers: administrator.create_new_auth_token,
+                             params: { q: 'NoMatchingAuditEvent' }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).not_to include('Filtered Inbox')
+    end
+  end
 end

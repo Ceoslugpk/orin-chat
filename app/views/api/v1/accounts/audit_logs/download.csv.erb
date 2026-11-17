@@ -1,0 +1,28 @@
+<%
+  headers = [
+    I18n.t('reports.audit_logs.headers.timestamp'),
+    I18n.t('reports.audit_logs.headers.actor'),
+    I18n.t('reports.audit_logs.headers.action'),
+    I18n.t('reports.audit_logs.headers.record_type'),
+    I18n.t('reports.audit_logs.headers.record_id'),
+    I18n.t('reports.audit_logs.headers.changes'),
+    I18n.t('reports.audit_logs.headers.ip_address'),
+    I18n.t('reports.audit_logs.headers.location')
+  ]
+-%>
+<%= CSVSafe.generate_line(headers) -%>
+<% @audit_logs.each do |audit_log| %>
+<%
+  row = [
+    audit_log.created_at.iso8601,
+    audit_log.user&.name || audit_log.username,
+    audit_log.action,
+    audit_log.auditable_type,
+    audit_log.auditable_id,
+    audit_log.audited_changes.to_json,
+    audit_log.remote_address,
+    audit_log.location
+  ]
+-%>
+<%= CSVSafe.generate_line(row).html_safe -%>
+<% end %>

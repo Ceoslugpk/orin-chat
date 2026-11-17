@@ -365,6 +365,16 @@ en:
       labels: Labels
       conversation_link: Link to the Conversation
       breached_events: Breached Events
+    audit_logs:
+      headers:
+        timestamp: Timestamp
+        actor: Actor
+        action: Action
+        record_type: Record Type
+        record_id: Record ID
+        changes: Changes
+        ip_address: IP Address
+        location: Location
     default_group_by: day
     csat:
       headers:

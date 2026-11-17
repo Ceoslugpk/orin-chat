@@ -20,9 +20,8 @@ Rails.application.config.to_prepare do
   CustomRole.audited associated_with: :account
 
   # Only membership and permission fields: active_at changes on every request.
-  # agent_capacity_policy_id has no model in this codebase, so it is not recorded.
   AccountUser.audited associated_with: :account,
-                      only: %i[user_id role availability auto_offline custom_role_id]
+                      only: %i[user_id role availability auto_offline custom_role_id agent_capacity_policy_id]
 
   InboxMember.audited associated_with: :account, on: %i[create destroy]
   TeamMember.audited associated_with: :account, on: %i[create destroy]

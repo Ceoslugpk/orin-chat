@@ -2,6 +2,7 @@ class Api::V1::Accounts::AuditLogsController < Api::V1::Accounts::BaseController
   SORT_DIRECTIONS = %w[asc desc].freeze
   AUDITABLE_TYPES = %w[Account AccountUser AutomationRule Conversation CustomRole Inbox InboxMember Macro Message Team TeamMember User Webhook].freeze
   MAX_SEARCH_LENGTH = 100
+  EXPORT_LIMIT = 10_000
 
   before_action :check_authorization
   before_action :validate_filters
@@ -14,6 +15,15 @@ class Api::V1::Accounts::AuditLogsController < Api::V1::Accounts::BaseController
                       .includes(:auditable)
                       .offset((@current_page - 1) * AuditLog::PER_PAGE)
                       .limit(AuditLog::PER_PAGE)
+  end
+
+  def download
+    @audit_logs = filtered_logs.order(created_at: :desc, id: :desc)
+                               .includes(:auditable, :user)
+                               .limit(EXPORT_LIMIT)
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=audit_logs.csv'
+    render layout: false, template: 'api/v1/accounts/audit_logs/download', formats: [:csv]
   end
 
   private

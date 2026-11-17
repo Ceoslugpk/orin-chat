@@ -33,15 +33,15 @@ RSpec.describe AuditLog do
       expect { account_user.update!(role: :administrator) }.to change(described_class, :count).by(1)
     end
 
-    it 'records permission-relevant membership changes, not the unmodelled capacity column' do
+    it 'records permission-relevant membership changes, including capacity policy changes' do
       custom_role = create(:custom_role, account: account)
+      capacity_policy = create(:agent_capacity_policy, account: account)
 
-      expect { create(:account_user, account: account, custom_role: custom_role) }
+      expect { create(:account_user, account: account, custom_role: custom_role, agent_capacity_policy: capacity_policy) }
         .to change { described_class.where(auditable_type: 'AccountUser').count }.by(1)
 
       log = described_class.order(:id).find_by(auditable_type: 'AccountUser', action: 'create')
-      expect(log.audited_changes).to include('custom_role_id', 'auto_offline')
-      expect(log.audited_changes).not_to have_key('agent_capacity_policy_id')
+      expect(log.audited_changes).to include('custom_role_id', 'auto_offline', 'agent_capacity_policy_id')
     end
 
     it 'keeps the removed account agent identity in the deletion audit' do
