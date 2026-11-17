@@ -10,7 +10,14 @@ module InboxAgentAvailability
   end
 
   def member_ids_with_assignment_capacity
-    member_ids
+    return member_ids unless account.feature_enabled?('advanced_assignment')
+
+    account_users = account.account_users.where(user_id: member_ids)
+    account_users = account_users.includes(:agent_capacity_policy).index_by(&:user_id)
+    member_ids.select do |user_id|
+      account_user = account_users[user_id]
+      account_user.nil? || account_user.capacity_available_for?(self)
+    end
   end
 
   private

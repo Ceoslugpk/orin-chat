@@ -39,6 +39,7 @@ class AccountUser < ApplicationRecord
   belongs_to :user
   belongs_to :inviter, class_name: 'User', optional: true
   belongs_to :custom_role, optional: true
+  belongs_to :agent_capacity_policy, optional: true
 
   enum :role, { agent: 0, administrator: 1 }
   enum :availability, { online: 0, offline: 1, busy: 2 }
@@ -56,6 +57,7 @@ class AccountUser < ApplicationRecord
   validates :user_id, uniqueness: { scope: :account_id }
   validate :accepts_conversations_or_calls
   validate :validate_custom_role_link, if: :custom_role_link_changed?
+  validate :agent_capacity_policy_belongs_to_account
 
   def create_notification_setting
     setting = user.notification_settings.new(account_id: account.id)
@@ -98,7 +100,24 @@ class AccountUser < ApplicationRecord
     }
   end
 
+  def available_capacity_for(inbox)
+    policy = agent_capacity_policy
+    return if policy.blank? || policy.account_id != account_id
+
+    policy.available_capacity_for(self, inbox)
+  end
+
+  def capacity_available_for?(inbox)
+    available_capacity_for(inbox) != 0
+  end
+
   private
+
+  def agent_capacity_policy_belongs_to_account
+    return if agent_capacity_policy.blank? || agent_capacity_policy.account_id == account_id
+
+    errors.add(:agent_capacity_policy, :invalid)
+  end
 
   def effective_custom_role_permissions
     linked_role = custom_role

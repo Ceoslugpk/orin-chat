@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_17_161459) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_17_182708) do
   # These extensions should be enabled to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -147,6 +147,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_17_161459) do
     t.jsonb "exclusion_rules", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_agent_capacity_policies_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_agent_capacity_policies_on_account_id"
   end
 

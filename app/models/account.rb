@@ -66,6 +66,7 @@ class Account < ApplicationRecord
   has_many :account_users, dependent: :destroy_async
   has_many :agent_bot_inboxes, dependent: :destroy_async
   has_many :agent_bots, dependent: :destroy_async
+  has_many :agent_capacity_policies, dependent: :destroy_async
   has_many :api_channels, dependent: :destroy_async, class_name: '::Channel::Api'
   has_many :articles, dependent: :destroy_async, class_name: '::Article'
   has_many :applied_slas, dependent: :destroy_async
@@ -143,12 +144,7 @@ class Account < ApplicationRecord
                              .map { |tagging| tagging.tag.name }
   end
 
-  def webhook_data
-    {
-      id: id,
-      name: name
-    }
-  end
+  def webhook_data = { id: id, name: name }
 
   def suspension_history
     internal_attributes['suspensions'] || []
