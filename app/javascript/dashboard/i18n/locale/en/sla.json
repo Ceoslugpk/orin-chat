@@ -71,6 +71,7 @@
       "THRESHOLD_TIME": {
         "INVALID_FORMAT_ERROR": "Threshold should be a number and greater than zero"
       },
+      "THRESHOLD_REQUIRED_ERROR": "Add at least one response or resolution threshold",
       "EDIT": "Edit",
       "CREATE": "Create",
       "DELETE": "Delete",

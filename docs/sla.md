@@ -19,9 +19,9 @@ re-implemented.
   `name`, `description`, `first_response_time_threshold`,
   `next_response_time_threshold`, `resolution_time_threshold`,
   `only_during_business_hours`.
-- The dashboard settings screen now explains that tracking is not available
-  yet instead of showing an upgrade/paywall path. The `sla` account feature
-  flag stays disabled, so the screen remains hidden from navigation.
+- Dashboard settings, reports, sidebar entries and report routes are gated by
+  the account `sla` flag. Accounts without the flag keep the previous
+  unavailable state and no upgrade/paywall path.
 - `AppliedSla` and `SlaEvent` records with status and event enums, account
   consistency validation and per-policy/conversation uniqueness. Due
   timestamps for first response, next response and resolution are stored on
@@ -65,14 +65,19 @@ re-implemented.
   breach jobs and notifications, completion, reopen and reports in one flow.
   Business-hours deadlines are covered across closed weekends and non-UTC
   inbox timezones.
+- Browser smoke checks against a disposable environment validated the policy
+  settings screen, an active conversation countdown, a breached conversation
+  label, and the reports page (metrics and conversation rows). The policy form
+  also rejects submissions without at least one threshold.
+- The `sla` account feature is enabled by default for new installations and
+  no longer marked premium. Existing accounts stay opted out until a Super
+  Admin enables the flag for them.
 
 ## Not implemented yet
 
 - Holiday-specific business hours. The `working_hours` gem supports them,
   but inboxes do not store holiday calendars yet.
-- Full browser lifecycle coverage and activation of the feature flag.
-- Dashboard validation of policy names and thresholds beyond the existing
-  client-side rules.
 
-Until those paths exist and are verified, the `sla` feature flag stays off
-and no upgrade or payment path is shown.
+The `sla` feature is active for new installations. Existing accounts can
+enable it from Super Admin; the dashboard hides SLA settings, reports and
+conversation labels until the account flag is on.

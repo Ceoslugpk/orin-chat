@@ -32,6 +32,7 @@ export default {
       name: '',
       description: '',
       isSlaTimeInputsInvalid: false,
+      thresholdsTouched: false,
       slaTimeInputsValidation: {},
       slaTimeInputs: [
         {
@@ -65,7 +66,13 @@ export default {
       return (
         this.v$.name.$invalid ||
         this.isSlaTimeInputsInvalid ||
+        !this.hasThreshold ||
         this.uiFlags.isUpdating
+      );
+    },
+    hasThreshold() {
+      return this.slaTimeInputs.some(
+        (_input, index) => this.convertToSeconds(index) !== null
       );
     },
     slaNameErrorMessage() {
@@ -117,9 +124,11 @@ export default {
       });
     },
     updateThreshold(index, value) {
+      this.thresholdsTouched = true;
       this.slaTimeInputs[index].threshold = value;
     },
     updateUnit(index, unit) {
+      this.thresholdsTouched = true;
       this.slaTimeInputs[index].unit = unit;
     },
     onSubmit() {
@@ -198,6 +207,13 @@ export default {
         @unit="updateUnit(index, $event)"
         @is-in-valid="handleIsInvalid(index, $event)"
       />
+
+      <p
+        v-if="thresholdsTouched && !hasThreshold"
+        class="mb-0 mt-1 w-full text-sm text-n-ruby-9"
+      >
+        {{ $t('SLA.FORM.THRESHOLD_REQUIRED_ERROR') }}
+      </p>
 
       <div
         class="mt-3 flex h-10 items-center text-sm w-full gap-2 border border-solid border-n-strong px-3 py-1.5 rounded-xl justify-between"
