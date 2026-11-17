@@ -168,6 +168,14 @@ RSpec.describe Integrations::Hook do
       expect(hook).not_to be_valid
     end
 
+    it 'allows saving an openai hook with a blank key for a custom OpenAI-compatible endpoint' do
+      InstallationConfig.find_or_initialize_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT').update!(value: 'http://localhost:11434')
+
+      hook = build(:integrations_hook, :openai, account: account, settings: { 'api_key' => '' })
+
+      expect(hook).to be_valid
+    end
+
     it 'allows saving an openai hook with a valid key' do
       allow(Integrations::Openai::KeyValidator).to receive(:valid?).and_return(true)
 

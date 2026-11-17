@@ -55,8 +55,11 @@ module CaptainFeaturable
 
       next if Llm::Models.valid_model_for?(feature_key, model_name)
 
-      allowed_models = Llm::Models.models_for(feature_key)
-      errors.add(:captain_models, "'#{model_name}' is not a valid model for #{feature_key}. Allowed: #{allowed_models.join(', ')}")
+      errors.add(
+        :captain_models,
+        "'#{model_name}' is not a valid model for #{feature_key}. " \
+        "Choose a catalog model or configure credentials for a custom #{Llm::Models.provider_for(model_name)} model."
+      )
     end
   end
 

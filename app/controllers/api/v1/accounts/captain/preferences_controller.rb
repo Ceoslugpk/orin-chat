@@ -64,15 +64,35 @@ class Api::V1::Accounts::Captain::PreferencesController < Api::V1::Accounts::Bas
     Llm::Models.feature_keys.index_with do |feature_key|
       config = Llm::Models.feature_config(feature_key)
       route = Llm::FeatureRouter.resolve(feature: feature_key, account: Current.account)
+      selected_model = route[:model]
+      models = config[:models] || []
+      models += [custom_model_entry(selected_model)] if custom_model_selected?(models, selected_model)
+
       config.merge(
+        models: models,
         default: default_model_for(feature_key),
         enabled: account_features[feature_key] == true,
-        model: route[:model],
-        selected: route[:model],
+        model: selected_model,
+        selected: selected_model,
         provider: route[:provider],
         source: route[:source]
       )
     end
+  end
+
+  def custom_model_selected?(models, selected_model)
+    selected_model.present? && models.none? { |model| model[:id] == selected_model }
+  end
+
+  def custom_model_entry(model_name)
+    model = Llm::Models.model_config(model_name) || {}
+    {
+      id: model_name,
+      display_name: model['display_name'] || model_name,
+      provider: model['provider'] || Llm::Models.provider_for(model_name),
+      coming_soon: false,
+      credit_multiplier: model['credit_multiplier']
+    }
   end
 
   def default_model_for(feature_key)

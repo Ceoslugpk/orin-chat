@@ -14,9 +14,17 @@ RSpec.describe Integrations::Openai::KeyValidator do
     expect(described_class.valid?(api_key)).to be false
   end
 
-  it 'rejects blank keys without making a network call' do
+  it 'rejects blank keys without making a network call for the standard endpoint' do
     expect(described_class.valid?(nil)).to be false
     expect(described_class.valid?('')).to be false
+  end
+
+  it 'accepts blank keys for a custom OpenAI-compatible endpoint' do
+    allow(InstallationConfig).to receive(:find_by).with(name: 'CAPTAIN_OPEN_AI_ENDPOINT')
+                                                  .and_return(instance_double(InstallationConfig, value: 'http://localhost:11434'))
+
+    expect(described_class.valid?(nil)).to be true
+    expect(described_class.valid?('')).to be true
   end
 
   it 'treats transient failures as valid to avoid blocking saves' do

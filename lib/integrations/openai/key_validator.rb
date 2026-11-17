@@ -2,7 +2,7 @@ module Integrations::Openai::KeyValidator
   TIMEOUT_SECONDS = 5
 
   def self.valid?(api_key)
-    return false if api_key.blank?
+    return custom_openai_endpoint? if api_key.blank?
 
     connection = Faraday.new do |f|
       f.options.timeout = TIMEOUT_SECONDS
@@ -23,4 +23,10 @@ module Integrations::Openai::KeyValidator
     endpoint = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value.presence || 'https://api.openai.com/'
     "#{endpoint.chomp('/')}/v1"
   end
+
+  def self.custom_openai_endpoint?
+    endpoint = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value
+    endpoint.present? && endpoint.to_s.chomp('/') != LlmConstants::OPENAI_API_ENDPOINT
+  end
+  private_class_method :custom_openai_endpoint?
 end
