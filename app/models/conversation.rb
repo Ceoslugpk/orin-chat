@@ -279,7 +279,8 @@ class Conversation < ApplicationRecord
     create_activity
     invalidate_filtered_unread_count_conversation
     notify_conversation_updation
-    Sla::ApplyPolicyService.new(self).perform if saved_change_to_sla_policy_id?
+    apply_sla_policy_change
+    update_sla_completion
   end
 
   def handle_resolved_status_change
@@ -289,6 +290,20 @@ class Conversation < ApplicationRecord
     # rubocop:disable Rails/SkipsModelValidations
     update_column(:waiting_since, nil)
     # rubocop:enable Rails/SkipsModelValidations
+  end
+
+  def apply_sla_policy_change
+    Sla::ApplyPolicyService.new(self).perform if saved_change_to_sla_policy_id?
+  end
+
+  def update_sla_completion
+    return unless saved_change_to_status?
+
+    if status == 'resolved'
+      Sla::CompletePolicyService.new(self).perform
+    else
+      Sla::ReopenPolicyService.new(self).perform
+    end
   end
 
   def ensure_snooze_until_reset

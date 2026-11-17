@@ -10,25 +10,38 @@ class Sla::ApplyPolicyService
     policy = conversation.sla_policy
     return unless policy
 
-    applied_sla = conversation.applied_slas.find_or_initialize_by(
-      account_id: conversation.account_id,
-      sla_policy_id: policy.id
-    )
+    applied_sla = find_or_initialize(policy)
     return applied_sla if applied_sla.persisted?
 
-    applied_sla.assign_attributes(
-      sla_status: :active,
-      sla_frt_due_at: due_at(policy, policy.first_response_time_threshold),
-      sla_nrt_due_at: due_at(policy, policy.next_response_time_threshold),
-      sla_rt_due_at: due_at(policy, policy.resolution_time_threshold)
-    )
+    applied_sla.assign_attributes(due_attributes(policy))
     applied_sla.save!
+    complete_if_resolved
     applied_sla
   end
 
   private
 
   attr_reader :conversation
+
+  def find_or_initialize(policy)
+    conversation.applied_slas.find_or_initialize_by(
+      account_id: conversation.account_id,
+      sla_policy_id: policy.id
+    )
+  end
+
+  def due_attributes(policy)
+    {
+      sla_status: :active,
+      sla_frt_due_at: due_at(policy, policy.first_response_time_threshold),
+      sla_nrt_due_at: due_at(policy, policy.next_response_time_threshold),
+      sla_rt_due_at: due_at(policy, policy.resolution_time_threshold)
+    }
+  end
+
+  def complete_if_resolved
+    Sla::CompletePolicyService.new(conversation).perform if conversation.resolved?
+  end
 
   def applied_at
     @applied_at ||= Time.current

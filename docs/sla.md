@@ -31,14 +31,18 @@ re-implemented.
   `add_sla` automation action assigns an account-owned policy; both the
   action and the conversation callback do nothing while the `sla` account
   flag is disabled.
+- Resolving a conversation completes the applied SLA as `hit` or `missed`,
+  recording first-response and resolution miss events (without duplicates)
+  and the completion time. Reopening a completed conversation restores
+  `active` or `active_with_misses` and clears the completion time.
 
 ## Not implemented yet
 
 - Conversation serialization of the current applied SLA and its events.
-- First/next/resolution hit, miss and completion transitions, including
-  reopening after resolution, `active_with_misses`, and first-response/
-  next-response/resolution event recording.
-- Miss notifications and the dashboard SLA status card.
+- Next-response miss detection. FRT and RT misses are evaluated at
+  resolution; NRT requires per-waiting-cycle tracking and breach jobs.
+- Breach detection while a conversation is still open (jobs), miss
+  notifications and the dashboard SLA status card.
 - Business-hours calculation for policies applied while the inbox is closed
   is implemented for due timestamps; holiday and audit-grade timezone
   coverage still needs verification.
