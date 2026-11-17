@@ -21,10 +21,12 @@ class InboxMember < ApplicationRecord
 
   belongs_to :user
   belongs_to :inbox
+  delegate :account, to: :inbox, allow_nil: true
 
   after_create :add_agent_to_round_robin
   after_destroy :remove_agent_from_round_robin
   after_commit :invalidate_filtered_unread_count_visibility, on: [:create, :destroy]
+  after_commit :notify_permissions_changed, on: [:create, :destroy]
 
   private
 
@@ -38,6 +40,13 @@ class InboxMember < ApplicationRecord
 
   def invalidate_filtered_unread_count_visibility
     ::Conversations::UnreadCounts::FilteredCountInvalidator.new(inbox&.account).user_visibility_changed!(user_id: user_id)
+  end
+
+  def notify_permissions_changed
+    account = inbox&.account
+    return unless account&.feature_enabled?('custom_roles')
+
+    Rails.configuration.dispatcher.dispatch(ACCOUNT_PERMISSIONS_CHANGED, Time.zone.now, account: account, user_id: user_id)
   end
 end
 

@@ -81,6 +81,7 @@ class Account < ApplicationRecord
   has_many :csat_survey_responses, dependent: :destroy_async
   has_many :custom_attribute_definitions, dependent: :destroy_async
   has_many :custom_filters, dependent: :destroy_async
+  has_many :custom_roles, dependent: :delete_all
   has_many :dashboard_apps, dependent: :destroy_async
   has_many :data_imports, dependent: :destroy_async
   has_many :data_exports, dependent: :destroy
@@ -117,7 +118,6 @@ class Account < ApplicationRecord
 
   scope :with_auto_resolve, -> { where("(settings ->> 'auto_resolve_after')::int IS NOT NULL") }
 
-  before_validation :validate_limit_keys
   after_create_commit :notify_creation
   after_update_commit :clear_unread_conversation_counts_cache, if: :saved_change_to_feature_conversation_unread_counts?
   after_update :resume_delayed_automations, if: -> { saved_change_to_feature_delayed_automations? && feature_delayed_automations? }
@@ -217,10 +217,6 @@ class Account < ApplicationRecord
 
   trigger.name('camp_dpid_before_insert').after(:insert).for_each(:row) do
     "execute format('create sequence IF NOT EXISTS camp_dpid_seq_%s', NEW.id);"
-  end
-
-  def validate_limit_keys
-    # method overridden in enterprise module
   end
 
   def validate_reporting_timezone

@@ -1,0 +1,23 @@
+type: object
+properties:
+  id:
+    type: integer
+    description: The ID of the custom role
+  name:
+    type: string
+    description: The display name of the custom role
+  description:
+    type: string
+    description: The purpose of the custom role
+  permissions:
+    type: array
+    description: Permission keys granted to agents holding this role
+    items:
+      type: string
+      enum:
+        - conversation_manage
+        - conversation_unassigned_manage
+        - conversation_participating_manage
+        - contact_manage
+        - report_manage
+        - knowledge_base_manage

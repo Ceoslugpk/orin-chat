@@ -29,9 +29,16 @@
 class AccountUser < ApplicationRecord
   include AvailabilityStatusable
 
+  CONVERSATION_ACCESS_SCOPES = {
+    'conversation_manage' => :all,
+    'conversation_unassigned_manage' => :unassigned,
+    'conversation_participating_manage' => :participating
+  }.freeze
+
   belongs_to :account
   belongs_to :user
   belongs_to :inviter, class_name: 'User', optional: true
+  belongs_to :custom_role, optional: true
 
   enum :role, { agent: 0, administrator: 1 }
   enum :availability, { online: 0, offline: 1, busy: 2 }
@@ -43,9 +50,12 @@ class AccountUser < ApplicationRecord
   after_save :update_presence_in_redis, if: :saved_change_to_availability?
   after_commit :invalidate_filtered_unread_count_visibility, on: [:create, :destroy]
   after_update_commit :invalidate_filtered_unread_count_visibility_update, if: :filtered_unread_count_visibility_changed?
+  after_commit :notify_permissions_changed, on: [:create, :destroy]
+  after_update_commit :notify_permissions_changed_on_update, if: :filtered_unread_count_visibility_changed?
 
   validates :user_id, uniqueness: { scope: :account_id }
   validate :accepts_conversations_or_calls
+  validate :validate_custom_role_link, if: :custom_role_link_changed?
 
   def create_notification_setting
     setting = user.notification_settings.new(account_id: account.id)
@@ -59,7 +69,24 @@ class AccountUser < ApplicationRecord
   end
 
   def permissions
-    administrator? ? ['administrator'] : ['agent']
+    return ['administrator'] if administrator?
+    return ['agent'] unless uses_custom_role_permissions?
+
+    effective_custom_role_permissions
+  end
+
+  def uses_custom_role_permissions?
+    agent? && custom_role_id.present? && account.feature_enabled?('custom_roles')
+  end
+
+  def conversation_access_scopes
+    return [:all] unless uses_custom_role_permissions?
+
+    permissions.filter_map { |permission| CONVERSATION_ACCESS_SCOPES[permission] }.uniq
+  end
+
+  def contact_access?
+    !uses_custom_role_permissions? || permissions.include?('contact_manage')
   end
 
   def push_event_data
@@ -72,6 +99,35 @@ class AccountUser < ApplicationRecord
   end
 
   private
+
+  def effective_custom_role_permissions
+    linked_role = custom_role
+    return [] unless linked_role && linked_role.account_id == account_id
+
+    permissions = Array(linked_role.permissions)
+    return [] if permissions.include?('administrator')
+
+    permissions
+  end
+
+  def custom_role_link_changed?
+    new_record? || will_save_change_to_custom_role_id? || will_save_change_to_account_id? || will_save_change_to_role? ||
+      association(:custom_role).target&.new_record?
+  end
+
+  def validate_custom_role_link
+    linked_role = custom_role
+    return if custom_role_id.nil? && linked_role.nil?
+
+    error = if linked_role.nil?
+              'missing'
+            elsif linked_role.account != account
+              'account_mismatch'
+            elsif !agent?
+              'agent_only'
+            end
+    errors.add(:custom_role, I18n.t("errors.account_user.custom_role.#{error}")) if error
+  end
 
   def notify_creation
     Rails.configuration.dispatcher.dispatch(AGENT_ADDED, Time.zone.now, account: account)
@@ -91,6 +147,16 @@ class AccountUser < ApplicationRecord
 
   def invalidate_filtered_unread_count_visibility
     ::Conversations::UnreadCounts::FilteredCountInvalidator.new(account).user_visibility_changed!(user_id: user_id)
+  end
+
+  def notify_permissions_changed
+    return unless account.feature_enabled?('custom_roles')
+
+    Rails.configuration.dispatcher.dispatch(ACCOUNT_PERMISSIONS_CHANGED, Time.zone.now, account: account, user_id: user_id)
+  end
+
+  def notify_permissions_changed_on_update
+    notify_permissions_changed
   end
 
   def invalidate_filtered_unread_count_visibility_update

@@ -492,6 +492,57 @@ RSpec.describe 'Api::V1::Accounts::Articles', type: :request do
     end
   end
 
+  describe 'custom role knowledge base access' do
+    def link_custom_role(permissions)
+      account.enable_features!(:custom_roles)
+      agent.account_users.find_by!(account: account).update!(
+        custom_role: create(:custom_role, account: account, permissions: permissions)
+      )
+    end
+
+    it 'allows article creation with knowledge_base_manage' do
+      link_custom_role(['knowledge_base_manage'])
+
+      post "/api/v1/accounts/#{account.id}/portals/#{portal.slug}/articles",
+           params: {
+             article: {
+               category_id: category.id,
+               description: 'custom role description',
+               title: 'Custom role article',
+               slug: 'custom-role-article',
+               content: 'Custom role content.',
+               status: :published,
+               author_id: agent.id
+             }
+           },
+           headers: agent.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'denies article creation without knowledge_base_manage' do
+      link_custom_role(['contact_manage'])
+
+      post "/api/v1/accounts/#{account.id}/portals/#{portal.slug}/articles",
+           params: {
+             article: {
+               category_id: category.id,
+               description: 'denied description',
+               title: 'Denied article',
+               slug: 'denied-article',
+               content: 'Denied content.',
+               status: :published,
+               author_id: agent.id
+             }
+           },
+           headers: agent.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe 'meta.noindex' do
     let(:article_url) { "/api/v1/accounts/#{account.id}/portals/#{portal.slug}/articles/#{article.id}" }
 

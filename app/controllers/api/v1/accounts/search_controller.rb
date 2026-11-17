@@ -1,6 +1,7 @@
 class Api::V1::Accounts::SearchController < Api::V1::Accounts::BaseController
   before_action :validate_page_size
   before_action :validate_count_types, only: :counts
+  before_action :authorize_contact_search, only: :contacts
 
   def counts
     service = search_service('all')
@@ -28,6 +29,10 @@ class Api::V1::Accounts::SearchController < Api::V1::Accounts::BaseController
   end
 
   private
+
+  def authorize_contact_search
+    authorize Contact, :search?
+  end
 
   def search(search_type)
     service = search_service(search_type)

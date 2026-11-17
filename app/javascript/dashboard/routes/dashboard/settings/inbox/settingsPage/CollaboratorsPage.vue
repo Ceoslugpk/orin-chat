@@ -322,7 +322,7 @@ const navigateToAssignmentPolicyEdit = () => {
 const handleUpgrade = () => {
   if (!isOnChatwootCloud.value) {
     window.open(
-      'https://www.chatwoot.com/pricing/self-hosted-plans',
+      'https://github.com/Ceoslugpk/orin-chat/discussions',
       '_blank',
       'noopener,noreferrer'
     );

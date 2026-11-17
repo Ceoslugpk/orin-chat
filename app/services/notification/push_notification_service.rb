@@ -5,6 +5,7 @@ class Notification::PushNotificationService
 
   def perform
     return unless user_subscribed_to_notification?
+    return unless Notification::DeliveryGuard.new(notification: notification).allowed?
 
     notification_subscriptions.each do |subscription|
       send_browser_push(subscription)

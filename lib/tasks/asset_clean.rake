@@ -1,4 +1,4 @@
-# Asset clean logic taken from the article https://chwt.app/heroku-slug-size
+# Remove Node dependencies during asset cleanup to reduce deployment size.
 
 namespace :assets do
   desc "Remove 'node_modules' folder"

@@ -328,5 +328,27 @@ describe ConversationFinder do
         expect(result[:count][:all_count]).to eq 1
       end
     end
+
+    context 'with a restricted custom role' do
+      before do
+        account.enable_features!(:custom_roles)
+        role = create(:custom_role, account: account, permissions: ['conversation_participating_manage'])
+        user_1.account_users.find_by!(account: account).update!(custom_role: role)
+      end
+
+      it 'lists only assigned and participating conversations with scoped counts' do
+        participant_conversation = create(:conversation, account: account, inbox: inbox)
+        create(:conversation_participant, user: user_1, conversation: participant_conversation, account: account)
+        create(:conversation, account: account, inbox: inbox, assignee: user_2)
+
+        result = described_class.new(user_1, { status: 'open' }).perform
+
+        expect(result[:conversations].map(&:id)).to contain_exactly(
+          *user_1.assigned_conversations.where(status: 'open').pluck(:id),
+          participant_conversation.id
+        )
+        expect(result[:count]).to include(all_count: 3, mine_count: 2, unassigned_count: 1)
+      end
+    end
   end
 end

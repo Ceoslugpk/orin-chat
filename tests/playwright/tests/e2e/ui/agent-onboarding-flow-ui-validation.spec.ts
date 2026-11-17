@@ -26,9 +26,7 @@ test.describe('Agent Onboarding - UI', () => {
     await expect(agentPage.getPageHeading()).toBeVisible();
     await expect(agentPage.getDescriptionText()).toBeVisible();
 
-    const learnLink = agentPage.getLearnLink();
-    await expect(learnLink).toBeVisible();
-    await expect(learnLink).toHaveAttribute('href', 'https://chwt.app/hc/agents');
+    await expect(agentPage.getLearnLink()).toHaveCount(0);
 
     await expect(agentPage.getAddAgentButton()).toBeVisible();
     await agentPage.openAddAgentModal();

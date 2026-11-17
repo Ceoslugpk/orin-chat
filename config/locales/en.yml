@@ -110,6 +110,10 @@ en:
     account_user:
       no_work_preference: Receive conversations or Receive voice calls must stay on
       invalid_work_preference: Receive conversations and Receive voice calls must be true or false
+      custom_role:
+        missing: does not exist
+        account_mismatch: must belong to the membership account
+        agent_only: can only be linked to an agent; clear it before changing the built-in role
     account:
       not_authorized: You are not authorized to access this account
       email_limit_exceeded: The daily email limit for this account has been reached
@@ -1140,11 +1144,11 @@ en:
       pages:
         general: 'General'
         internal: 'Internal'
-        internal_description: 'Keys and switches used by Chatwoot Cloud'
+        internal_description: 'Internal installation settings.'
       configure: 'Configure'
-      enterprise_badge: 'EE'
+      enterprise_badge: 'Planned'
       included: 'Included'
-      locked: 'Locked'
+      locked: 'Coming soon'
       installation_identifier_description: 'Unique ID of this installation.'
       default_description: 'Instance-wide options'
       description: 'Update your instance settings'
@@ -1153,7 +1157,7 @@ en:
       need_help: 'Need help?'
       need_help_description: 'Do you face any issues? We are here to help.'
       community_support: 'Community Support'
-      switch_to_enterprise: 'Switch to Enterprise edition'
+      switch_to_enterprise: 'Not available yet'
     users:
       impersonate: 'Impersonate user'
       copy_impersonation_link: 'Copy link'

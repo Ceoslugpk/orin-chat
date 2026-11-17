@@ -16,3 +16,9 @@ properties:
     type: boolean
     description: Whether the agent is automatically marked offline when they are away.
     example: true
+  custom_role_id:
+    type:
+      - integer
+      - 'null'
+    description: Account-owned custom role definition for the agent. Omit to keep the current reference; send null to clear it.
+    example: 1

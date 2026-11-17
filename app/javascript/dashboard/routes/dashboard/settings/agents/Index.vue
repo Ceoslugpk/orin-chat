@@ -19,6 +19,8 @@ import EditAgent from './EditAgent.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { getCustomRoleLabel } from 'dashboard/helper/customRoleHelper';
+import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 
 const getters = useStoreGetters();
 const store = useStore();
@@ -53,25 +55,38 @@ const filteredAgentList = computed(() => {
 const uiFlags = computed(() => getters['agents/getUIFlags'].value);
 const currentUserId = computed(() => getters.getCurrentUserID.value);
 const customRoles = useMapGetter('customRole/getCustomRoles');
+const isFeatureEnabledonAccount = useMapGetter(
+  'accounts/isFeatureEnabledonAccount'
+);
+const currentAccountId = useMapGetter('getCurrentAccountId');
 
 onMounted(() => {
   store.dispatch('agents/get');
   store.dispatch('customRole/getCustomRole');
 });
 
+const customRolesEnabled = computed(() =>
+  isFeatureEnabledonAccount.value(
+    currentAccountId.value,
+    FEATURE_FLAGS.CUSTOM_ROLES
+  )
+);
+
+const hasCustomRole = agent =>
+  Boolean(agent.custom_role_id) && customRolesEnabled.value;
+
 const findCustomRole = agent =>
   customRoles.value.find(role => role.id === agent.custom_role_id);
 
 const getAgentRoleName = agent => {
-  if (!agent.custom_role_id) {
+  if (!hasCustomRole(agent)) {
     return t(`AGENT_MGMT.AGENT_TYPES.${agent.role.toUpperCase()}`);
   }
-  const customRole = findCustomRole(agent);
-  return customRole ? customRole.name : '';
+  return getCustomRoleLabel(customRoles.value, agent.custom_role_id, t);
 };
 
 const getAgentRolePermissions = agent => {
-  if (!agent.custom_role_id) {
+  if (!hasCustomRole(agent)) {
     return [];
   }
   const customRole = findCustomRole(agent);
@@ -233,14 +248,14 @@ usePageCommands(() => [
                   class="block w-fit text-body-main text-n-slate-11 relative"
                   :class="{
                     'hover:text-n-slate-12 group cursor-pointer':
-                      agent.custom_role_id,
+                      hasCustomRole(agent),
                   }"
                 >
                   {{ getAgentRoleName(agent) }}
 
                   <div
                     class="absolute ltr:left-0 rtl:right-0 z-10 hidden w-[300px] bg-n-alpha-3 backdrop-blur-[100px] rounded-xl outline outline-1 outline-n-container shadow-lg top-14 md:top-12"
-                    :class="{ 'group-hover:block': agent.custom_role_id }"
+                    :class="{ 'group-hover:block': hasCustomRole(agent) }"
                   >
                     <div class="flex flex-col gap-1 p-4">
                       <span class="text-heading-3 text-n-slate-12">

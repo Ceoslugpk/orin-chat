@@ -113,4 +113,70 @@ RSpec.describe Conversations::UnreadCounts::Counter do
       folders: { '4' => 5 }
     )
   end
+
+  describe 'custom role permissions' do
+    let(:other_agent) { create(:user, account: account, role: :agent) }
+
+    def link_custom_role(permissions)
+      role = create(:custom_role, account: account, permissions: permissions)
+      agent.account_users.find_by!(account: account).update!(custom_role: role)
+      role
+    end
+
+    it 'counts every visible conversation for a conversation_manage role' do
+      account.enable_features!(:custom_roles)
+      link_custom_role(['conversation_manage'])
+      create_unread_conversation(account: account, inbox: visible_inbox)
+      create_unread_conversation(account: account, inbox: visible_inbox, assignee: other_agent)
+
+      result = described_class.new(account: account, user: agent).perform
+
+      expect(result[:all_count]).to eq(2)
+    end
+
+    it 'counts unassigned and own conversations for an unassigned_manage role' do
+      account.enable_features!(:custom_roles)
+      link_custom_role(['conversation_unassigned_manage'])
+      create_unread_conversation(account: account, inbox: visible_inbox)
+      create_unread_conversation(account: account, inbox: visible_inbox, assignee: agent)
+      create_unread_conversation(account: account, inbox: visible_inbox, assignee: other_agent)
+
+      result = described_class.new(account: account, user: agent).perform
+
+      expect(result[:all_count]).to eq(2)
+    end
+
+    it 'counts only own conversations for a participating_manage role' do
+      account.enable_features!(:custom_roles)
+      link_custom_role(['conversation_participating_manage'])
+      create_unread_conversation(account: account, inbox: visible_inbox)
+      create_unread_conversation(account: account, inbox: visible_inbox, assignee: agent)
+      create_unread_conversation(account: account, inbox: visible_inbox, assignee: other_agent)
+
+      result = described_class.new(account: account, user: agent).perform
+
+      expect(result[:all_count]).to eq(1)
+    end
+
+    it 'keeps ordinary agent counts when custom roles are disabled' do
+      link_custom_role(['conversation_participating_manage'])
+      create_unread_conversation(account: account, inbox: visible_inbox)
+      create_unread_conversation(account: account, inbox: visible_inbox, assignee: other_agent)
+
+      result = described_class.new(account: account, user: agent).perform
+
+      expect(result[:all_count]).to eq(2)
+    end
+
+    it 'returns no counts when an activated role definition is missing' do
+      role = link_custom_role(['conversation_manage'])
+      role.delete
+      account.enable_features!(:custom_roles)
+      create_unread_conversation(account: account, inbox: visible_inbox)
+
+      result = described_class.new(account: account, user: agent).perform
+
+      expect(result).to eq(all_count: 0, inboxes: {}, labels: {}, teams: {})
+    end
+  end
 end

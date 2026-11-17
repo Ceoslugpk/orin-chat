@@ -2,6 +2,52 @@ require 'rails_helper'
 
 RSpec.describe DeleteObjectJob, type: :job do
   describe '#perform' do
+    context 'when recording audit logs' do
+      let!(:account) { create(:account) }
+      let!(:inbox) { create(:inbox, account: account) }
+      let(:user) { create(:user, account: account, role: :administrator) }
+
+      it 'records a conversation deletion with the deleting user and IP' do
+        conversation = create(:conversation, account: account, inbox: inbox)
+
+        described_class.perform_now(conversation, user, '198.51.100.4')
+
+        log = AuditLog.for_account(account).find_by(auditable_type: 'Conversation', auditable_id: conversation.id)
+        expect(log.action).to eq('destroy')
+        expect(log.user).to eq(user)
+        expect(log.remote_address).to eq('198.51.100.4')
+        expect(log.audited_changes).to eq('display_id' => conversation.display_id)
+      end
+
+      it 'rolls back a conversation deletion if its audit cannot be recorded' do
+        conversation = create(:conversation, account: account, inbox: inbox)
+        allow(AuditLog).to receive(:record!).and_raise(ActiveRecord::RecordInvalid)
+
+        expect do
+          described_class.perform_now(conversation, user)
+        end.to raise_error(ActiveRecord::RecordInvalid)
+
+        expect(Conversation.exists?(conversation.id)).to be(true)
+      end
+
+      it 'attributes audits from purged inboxes to the deleting user' do
+        described_class.perform_now(account, user, '198.51.100.4')
+
+        log = AuditLog.find_by(auditable_type: 'Inbox', auditable_id: inbox.id, action: 'destroy')
+        expect(log.user).to eq(user)
+        expect(log.remote_address).to eq('198.51.100.4')
+      end
+
+      it 'does not write one audit per conversation when an inbox is deleted' do
+        create_list(:conversation, 3, account: account, inbox: inbox)
+
+        described_class.perform_now(inbox, user, '198.51.100.4')
+
+        expect(AuditLog.where(auditable_type: 'Conversation')).to be_empty
+        expect(AuditLog.for_account(account).find_by(auditable: inbox, action: 'destroy').user).to eq(user)
+      end
+    end
+
     context 'when object is heavy (Inbox)' do
       let!(:account) { create(:account) }
       let!(:inbox) { create(:inbox, account: account) }

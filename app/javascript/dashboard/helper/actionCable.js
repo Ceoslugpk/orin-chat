@@ -63,6 +63,7 @@ class ActionCableConnector extends BaseActionCableConnector {
       'conversation.unread_count_changed':
         this.onConversationUnreadCountChanged,
       'account.cache_invalidated': this.onCacheInvalidate,
+      'account.permissions_changed': this.onPermissionsChanged,
       'account.enrichment_completed': this.onEnrichmentCompleted,
       'account.billing_updated': this.onBillingUpdated,
       'copilot.message.created': this.onCopilotMessageCreated,
@@ -440,6 +441,12 @@ class ActionCableConnector extends BaseActionCableConnector {
       this.refreshConversationUnreadCountsWithFilteredRetry();
     }
   };
+
+  // A role, custom-role or inbox/team membership change can alter what this
+  // session may see. Reloading discards every cached store before new data is
+  // fetched under the updated permissions.
+  // eslint-disable-next-line class-methods-use-this
+  onPermissionsChanged = () => window.location.reload();
 
   onVoiceCallIncoming = data => {
     if (data?.provider !== VOICE_CALL_PROVIDERS.WHATSAPP) return;

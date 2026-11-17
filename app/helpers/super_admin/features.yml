@@ -1,47 +1,53 @@
 # TODO: Move this values to features.yml itself
 # No need to replicate the same values in two places
 
-# ------- Premium Features ------- #
+# Features are shown as planned until their open-source implementations are ready.
+# Availability is never based on a subscription or pricing plan.
+# ------- Planned Features ------- #
 saml:
   name: 'SAML SSO'
   description: 'Configuration for controlling SAML Single Sign-On availability'
-  enabled: <%= ChatwootApp.enterprise? %>
+  enabled: false
   icon: 'i-lucide-key-round'
   config_key: 'saml'
   enterprise: true
 custom_branding:
   name: 'Custom Branding'
   description: 'Apply your own branding to this installation.'
-  enabled: <%= (ChatwootHub.pricing_plan != 'community') %>
+  enabled: false
   icon: 'i-lucide-palette'
   config_key: 'custom_branding'
   enterprise: true
 agent_capacity:
   name: 'Agent Capacity'
   description: 'Set limits to auto-assigning conversations to your agents.'
-  enabled: <%= (ChatwootHub.pricing_plan != 'community') %>
+  enabled: false
   icon: 'i-lucide-gauge'
-  enterprise: true
-audit_logs:
-  name: 'Audit Logs'
-  description: 'Track and trace account activities with ease with detailed audit logs.'
-  enabled: <%= (ChatwootHub.pricing_plan != 'community') %>
-  icon: 'i-lucide-scroll-text'
   enterprise: true
 disable_branding:
   name: 'Disable Branding'
   description: 'Disable branding on live-chat widget and external emails.'
-  enabled: <%= (ChatwootHub.pricing_plan != 'community') %>
+  enabled: false
   icon: 'i-lucide-eye-off'
   enterprise: true
 voice_calls:
   name: 'Voice Calls'
   description: 'Enable voice calling capabilities for your agents and customers.'
-  enabled: <%= (ChatwootHub.pricing_plan != 'community') %>
+  enabled: false
   icon: 'i-lucide-phone-call'
   enterprise: true
 
 # ------- Product Features ------- #
+audit_logs:
+  name: 'Audit Logs'
+  description: 'Track account activity with detailed audit logs.'
+  enabled: true
+  icon: 'i-lucide-scroll-text'
+custom_roles:
+  name: 'Custom Roles'
+  description: 'Define reusable permission sets for agents and assign them to team members.'
+  enabled: true
+  icon: 'i-lucide-shield-plus'
 help_center:
   name: 'Help Center'
   description: 'Allow agents to create help center articles and publish them in a portal.'
@@ -62,13 +68,13 @@ live_chat:
   icon: 'i-lucide-message-circle'
 email:
   name: 'Email'
-  description: 'Manage your email customer interactions from Chatwoot.'
+  description: 'Manage customer email interactions in your support workspace.'
   enabled: true
   icon: 'i-lucide-mail'
   config_key: 'email'
 sms:
   name: 'SMS'
-  description: 'Manage your SMS customer interactions from Chatwoot.'
+  description: 'Manage customer SMS interactions in your support workspace.'
   enabled: true
   icon: 'i-lucide-message-square-text'
 messenger:
@@ -91,17 +97,17 @@ tiktok:
   config_key: 'tiktok'
 whatsapp:
   name: 'WhatsApp'
-  description: 'Manage your WhatsApp business interactions from Chatwoot.'
+  description: 'Manage WhatsApp business interactions in your support workspace.'
   enabled: true
   icon: 'i-logos-whatsapp-icon'
 telegram:
   name: 'Telegram'
-  description: 'Manage your Telegram customer interactions from Chatwoot.'
+  description: 'Manage customer Telegram interactions in your support workspace.'
   enabled: true
   icon: 'i-logos-telegram'
 line:
   name: 'Line'
-  description: 'Manage your Line customer interactions from Chatwoot.'
+  description: 'Manage customer Line interactions in your support workspace.'
   enabled: true
   icon: 'i-ri-line-fill text-[#06C755]'
 

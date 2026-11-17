@@ -108,5 +108,25 @@ RSpec.describe BulkActionsJob do
       expect(conversation_1.reload.status).to eq('resolved')
       expect(forbidden_conversation.reload.status).to eq('open')
     end
+
+    it 'skips conversations outside a restricted custom role scope' do
+      account.enable_features!(:custom_roles)
+      role = create(:custom_role, account: account, permissions: ['conversation_unassigned_manage'])
+      agent.account_users.find_by!(account: account).update!(custom_role: role)
+      other_agent = create(:user, account: account, role: :agent)
+      other_conversation = create(:conversation, account: account, status: :open, assignee: other_agent)
+      create(:inbox_member, inbox: other_conversation.inbox, user: agent)
+
+      params = {
+        type: 'Conversation',
+        fields: { status: 'resolved' },
+        ids: conversation_ids + [other_conversation.display_id]
+      }
+
+      described_class.perform_now(account: account, params: params, user: agent)
+
+      expect(conversation_1.reload.status).to eq('resolved')
+      expect(other_conversation.reload.status).to eq('open')
+    end
   end
 end

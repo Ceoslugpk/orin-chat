@@ -1,3 +1,5 @@
+import { getCustomRoleLabel } from 'dashboard/helper/customRoleHelper';
+
 const roleMapping = {
   0: 'agent',
   1: 'administrator',
@@ -27,7 +29,11 @@ const translationKeys = {
   'macro:create': `AUDIT_LOGS.MACRO.ADD`,
   'macro:update': `AUDIT_LOGS.MACRO.EDIT`,
   'macro:destroy': `AUDIT_LOGS.MACRO.DELETE`,
+  'customrole:create': `AUDIT_LOGS.CUSTOM_ROLE.ADD`,
+  'customrole:update': `AUDIT_LOGS.CUSTOM_ROLE.EDIT`,
+  'customrole:destroy': `AUDIT_LOGS.CUSTOM_ROLE.DELETE`,
   'accountuser:create': `AUDIT_LOGS.ACCOUNT_USER.ADD`,
+  'accountuser:destroy': `AUDIT_LOGS.ACCOUNT_USER.REMOVE`,
   'accountuser:update:self': `AUDIT_LOGS.ACCOUNT_USER.EDIT.SELF`,
   'accountuser:update:other': `AUDIT_LOGS.ACCOUNT_USER.EDIT.OTHER`,
   'accountuser:update:deleted': `AUDIT_LOGS.ACCOUNT_USER.EDIT.DELETED`,
@@ -47,21 +53,54 @@ function extractAttrChange(attrChange) {
   return attrChange;
 }
 
-export function extractChangedAccountUserValues(auditedChanges) {
+const customRoleName = (customRoleList, roleId, t) => {
+  const label = getCustomRoleLabel(customRoleList, roleId, t);
+  // The removed definition is not in the current list, so the label comes only from the audit payload.
+  return label || `#${roleId}`;
+};
+
+export function extractChangedAccountUserValues(
+  auditedChanges,
+  customRoleList = [],
+  t = key => key
+) {
   let changes = [];
   let values = [];
 
   // Check roles
   if (auditedChanges.role && auditedChanges.role.length) {
     changes.push('role');
-    values.push(roleMapping[extractAttrChange(auditedChanges.role)]);
+    values.push(
+      roleMapping[extractAttrChange(auditedChanges.role)] || 'unknown'
+    );
   }
 
   // Check availability
   if (auditedChanges.availability && auditedChanges.availability.length) {
     changes.push('availability');
     values.push(
-      availabilityMapping[extractAttrChange(auditedChanges.availability)]
+      availabilityMapping[extractAttrChange(auditedChanges.availability)] ||
+        'unknown'
+    );
+  }
+
+  if (auditedChanges.auto_offline && auditedChanges.auto_offline.length) {
+    changes.push('auto_offline');
+    const enabled = extractAttrChange(auditedChanges.auto_offline);
+    values.push(
+      enabled
+        ? t('AUDIT_LOGS.ATTRIBUTES.AUTO_OFFLINE_ON')
+        : t('AUDIT_LOGS.ATTRIBUTES.AUTO_OFFLINE_OFF')
+    );
+  }
+
+  if (auditedChanges.custom_role_id && auditedChanges.custom_role_id.length) {
+    changes.push('custom_role_id');
+    const roleId = extractAttrChange(auditedChanges.custom_role_id);
+    values.push(
+      roleId === null || roleId === undefined
+        ? t('AUDIT_LOGS.ATTRIBUTES.CUSTOM_ROLE_NONE')
+        : customRoleName(customRoleList, roleId, t)
     );
   }
 
@@ -91,7 +130,13 @@ function handleAccountUserCreate(auditLogItem, translationPayload, agentList) {
   return translationPayload;
 }
 
-function handleAccountUserUpdate(auditLogItem, translationPayload, agentList) {
+function handleAccountUserUpdate(
+  auditLogItem,
+  translationPayload,
+  agentList,
+  customRoleList = [],
+  t = key => key
+) {
   if (auditLogItem.user_id !== auditLogItem.auditable?.user_id) {
     translationPayload.user = getAgentName(
       auditLogItem.auditable?.user_id,
@@ -100,7 +145,9 @@ function handleAccountUserUpdate(auditLogItem, translationPayload, agentList) {
   }
 
   const accountUserChanges = extractChangedAccountUserValues(
-    auditLogItem.audited_changes
+    auditLogItem.audited_changes,
+    customRoleList,
+    t
   );
   if (accountUserChanges) {
     translationPayload.attributes = accountUserChanges.changes;
@@ -148,20 +195,37 @@ function handleAccountUser(
   auditLogItem,
   translationPayload,
   agentList,
-  action
+  action,
+  customRoleList = [],
+  t = key => key
 ) {
   if (action === 'create') {
     return handleAccountUserCreate(auditLogItem, translationPayload, agentList);
   }
 
   if (action === 'update') {
-    return handleAccountUserUpdate(auditLogItem, translationPayload, agentList);
+    return handleAccountUserUpdate(
+      auditLogItem,
+      translationPayload,
+      agentList,
+      customRoleList,
+      t
+    );
+  }
+
+  if (action === 'destroy') {
+    return setUserInPayload(auditLogItem, translationPayload, agentList);
   }
 
   return translationPayload;
 }
 
-export function generateTranslationPayload(auditLogItem, agentList) {
+export function generateTranslationPayload(
+  auditLogItem,
+  agentList,
+  customRoleList = [],
+  t = key => key
+) {
   let translationPayload = {
     agentName: getAgentName(auditLogItem.user_id, agentList),
     id: auditLogItem.auditable_id,
@@ -185,7 +249,9 @@ export function generateTranslationPayload(auditLogItem, agentList) {
       auditLogItem,
       translationPayload,
       agentList,
-      action
+      action,
+      customRoleList,
+      t
     );
   }
 
@@ -230,6 +296,7 @@ export const EVENT_TYPE_GROUPS = [
     key: 'AGENTS_TEAMS',
     types: [
       { value: 'AccountUser', key: 'AGENTS' },
+      { value: 'CustomRole', key: 'CUSTOM_ROLES' },
       { value: 'Team', key: 'TEAMS' },
       { value: 'TeamMember', key: 'TEAM_MEMBERS' },
       { value: 'InboxMember', key: 'INBOX_MEMBERS' },

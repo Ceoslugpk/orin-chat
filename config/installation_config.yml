@@ -186,7 +186,7 @@
 # MARK: Microsoft Email Channel Config
 - name: AZURE_APP_ID
   display_title: 'Azure App ID'
-  description: 'The App ID that will be used to authenticate with customer Microsoft accounts. Find more details on setting up Azure here: https://chwt.app/dev/ms'
+  description: 'The App ID used to authenticate with customer Microsoft accounts. See Microsoft Entra ID documentation for setup instructions.'
   locked: false
 - name: AZURE_APP_SECRET
   display_title: 'Azure App Secret'
@@ -204,7 +204,7 @@
 - name: CAPTAIN_TOOLS_CATALOG_URL
   display_title: 'Captain Tools Catalog URL'
   description: 'Base URL of the Captain tools catalog. The dashboard loads this URL with .json appended to list toolsets, so it must allow cross-origin requests.'
-  value: 'https://www.chatwoot.com/captain/tools'
+  value: ''
   locked: false
 - name: CAPTAIN_TOOLS_GITHUB_TOKEN
   display_title: 'Captain Tools GitHub Token'

@@ -7,6 +7,7 @@ class Notification::EmailNotificationService
     # don't send emails if user is not confirmed
     return if notification.user.confirmed_at.nil?
     return unless user_subscribed_to_notification?
+    return unless Notification::DeliveryGuard.new(notification: notification).allowed?
     return unless notification.account.within_email_rate_limit?
 
     send_notification_email

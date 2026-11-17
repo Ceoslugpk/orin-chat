@@ -493,6 +493,21 @@ RSpec.describe 'Conversations API', type: :request do
           expect(response_data[:additional_attributes]).to eq(additional_attributes)
         end
 
+        it 'does not create a conversation when a custom role lacks conversation permission' do
+          account.enable_features!(:custom_roles)
+          role = create(:custom_role, account: account, permissions: ['contact_manage'])
+          agent.account_users.find_by!(account: account).update!(custom_role: role)
+
+          expect do
+            post "/api/v1/accounts/#{account.id}/conversations",
+                 headers: agent.create_new_auth_token,
+                 params: { source_id: contact_inbox.source_id },
+                 as: :json
+          end.not_to change(Conversation, :count)
+
+          expect(response).to have_http_status(:unauthorized)
+        end
+
         it 'does not create a new conversation if source_id is not unique' do
           new_contact = create(:contact, account: account)
 

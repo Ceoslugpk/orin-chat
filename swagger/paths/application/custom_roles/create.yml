@@ -1,0 +1,33 @@
+tags:
+  - Custom Roles
+operationId: create-custom-role
+summary: Create a custom role
+description: Create a custom role definition in the account
+security:
+  - userBearerAuth: []
+  - userApiKey: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/custom_role_create_update_payload'
+responses:
+  '201':
+    description: Created
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/custom_role'
+  '403':
+    description: Access denied
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'
+  '422':
+    description: Invalid custom role
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'

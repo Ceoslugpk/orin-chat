@@ -325,6 +325,26 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
 
         expect(response).to have_http_status(:unauthorized)
       end
+
+      it 'denies contact label actions for a custom role without contact_manage' do
+        account.enable_features!(:custom_roles)
+        agent.account_users.find_by!(account: account).update!(
+          custom_role: create(:custom_role, account: account, permissions: ['report_manage'])
+        )
+        contact = create(:contact, account: account)
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: {
+                 type: 'Contact',
+                 ids: [contact.id],
+                 labels: { add: %w[vip] }
+               }
+        end.not_to have_enqueued_job(Contacts::BulkActionJob)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
     end
   end
 end

@@ -129,18 +129,18 @@ export const twilioTemplates = [
     template_type: 'quick_reply',
   },
   {
-    body: 'What type of Chatwoot installation are you using? Select "Chatwoot Cloud" if you are using app.chatwoot.com, otherwise select "Self-hosted Chatwoot".',
+    body: 'Which type of support platform are you using? Choose "Hosted" for a managed service, or "Self-hosted" for an installation you run yourself.',
     types: {
       'twilio/quick-reply': {
-        body: 'What type of Chatwoot installation are you using? Select "Chatwoot Cloud" if you are using app.chatwoot.com, otherwise select "Self-hosted Chatwoot".',
+        body: 'Which type of support platform are you using? Choose "Hosted" for a managed service, or "Self-hosted" for an installation you run yourself.',
         actions: [
           {
-            id: 'Chatwoot Cloud_payload',
-            title: 'Chatwoot Cloud',
+            id: 'hosted_payload',
+            title: 'Hosted',
           },
           {
-            id: 'Self-hosted Chatwoot_payload',
-            title: 'Self-hosted Chatwoot',
+            id: 'self_hosted_payload',
+            title: 'Self-hosted',
           },
         ],
       },

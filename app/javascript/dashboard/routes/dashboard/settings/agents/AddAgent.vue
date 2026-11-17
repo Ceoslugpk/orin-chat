@@ -6,6 +6,8 @@ import { useAlert } from 'dashboard/composables';
 import { useVuelidate } from '@vuelidate/core';
 import { required, email } from '@vuelidate/validators';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import { getAgentRoleOptions } from 'dashboard/helper/customRoleHelper';
 
 const emit = defineEmits(['close']);
 
@@ -30,29 +32,21 @@ const v$ = useVuelidate(rules, {
 
 const uiFlags = useMapGetter('agents/getUIFlags');
 const getCustomRoles = useMapGetter('customRole/getCustomRoles');
+const isFeatureEnabledonAccount = useMapGetter(
+  'accounts/isFeatureEnabledonAccount'
+);
+const currentAccountId = useMapGetter('getCurrentAccountId');
 
-const roles = computed(() => {
-  const defaultRoles = [
-    {
-      id: 'administrator',
-      name: 'administrator',
-      label: t('AGENT_MGMT.AGENT_TYPES.ADMINISTRATOR'),
-    },
-    {
-      id: 'agent',
-      name: 'agent',
-      label: t('AGENT_MGMT.AGENT_TYPES.AGENT'),
-    },
-  ];
+const customRolesEnabled = computed(() =>
+  isFeatureEnabledonAccount.value(
+    currentAccountId.value,
+    FEATURE_FLAGS.CUSTOM_ROLES
+  )
+);
 
-  const customRoles = getCustomRoles.value.map(role => ({
-    id: role.id,
-    name: `custom_${role.id}`,
-    label: role.name,
-  }));
-
-  return [...defaultRoles, ...customRoles];
-});
+const roles = computed(() =>
+  getAgentRoleOptions(customRolesEnabled.value ? getCustomRoles.value : [], t)
+);
 
 const selectedRole = computed(() =>
   roles.value.find(

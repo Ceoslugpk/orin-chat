@@ -69,5 +69,92 @@ RSpec.describe Conversations::PermissionFilterService do
         expect(result).to include(inaccessible_conversation)
       end
     end
+
+    context 'with a restricted custom role' do
+      let(:other_agent) { create(:user, account: account, role: :agent) }
+      let(:other_inbox) { create(:inbox, account: account) }
+      let!(:unassigned_conversation) { create(:conversation, account: account, inbox: inbox) }
+      let!(:assigned_conversation) { create(:conversation, account: account, inbox: inbox, assignee: agent) }
+      let!(:other_agent_conversation) { create(:conversation, account: account, inbox: inbox, assignee: other_agent) }
+      let!(:participant_conversation) { create(:conversation, account: account, inbox: inbox, assignee: other_agent) }
+      let!(:inaccessible_conversation) { create(:conversation, account: account, inbox: other_inbox) }
+
+      before do
+        create(:conversation_participant, account: account, conversation: participant_conversation, user: agent)
+        account.enable_features!(:custom_roles)
+        agent.account_users.find_by!(account: account).update!(custom_role: create(:custom_role, account: account, permissions: permissions))
+      end
+
+      def filtered_conversations
+        described_class.new(account.conversations, agent, account).perform
+      end
+
+      context 'with conversation_manage' do
+        let(:permissions) { ['conversation_manage'] }
+
+        it 'returns every conversation in assigned inboxes' do
+          result = filtered_conversations
+
+          expect(result).to include(unassigned_conversation, assigned_conversation, other_agent_conversation, participant_conversation)
+          expect(result).not_to include(inaccessible_conversation)
+        end
+      end
+
+      context 'with conversation_unassigned_manage' do
+        let(:permissions) { ['conversation_unassigned_manage'] }
+
+        it 'returns unassigned and own conversations only' do
+          result = filtered_conversations
+
+          expect(result).to include(conversation, another_conversation, unassigned_conversation, assigned_conversation)
+          expect(result).not_to include(other_agent_conversation, participant_conversation, inaccessible_conversation)
+        end
+      end
+
+      context 'with conversation_participating_manage' do
+        let(:permissions) { ['conversation_participating_manage'] }
+
+        it 'returns participating and own conversations only' do
+          result = filtered_conversations
+
+          expect(result).to include(assigned_conversation, participant_conversation)
+          expect(result).not_to include(conversation, another_conversation, unassigned_conversation, other_agent_conversation)
+          expect(result).not_to include(inaccessible_conversation)
+        end
+      end
+
+      context 'with both unassigned and participating scopes' do
+        let(:permissions) { %w[conversation_unassigned_manage conversation_participating_manage] }
+
+        it 'combines the scopes' do
+          result = filtered_conversations
+
+          expect(result).to include(conversation, another_conversation, unassigned_conversation, assigned_conversation,
+                                    participant_conversation)
+          expect(result).not_to include(other_agent_conversation, inaccessible_conversation)
+        end
+      end
+
+      context 'without a conversation permission' do
+        let(:permissions) { ['contact_manage'] }
+
+        it 'returns no conversations' do
+          expect(filtered_conversations).to be_empty
+        end
+      end
+
+      context 'when custom roles are disabled' do
+        let(:permissions) { ['conversation_participating_manage'] }
+
+        before { account.disable_features!(:custom_roles) }
+
+        it 'keeps ordinary agent inbox scoping' do
+          result = filtered_conversations
+
+          expect(result).to include(unassigned_conversation, assigned_conversation, other_agent_conversation, participant_conversation)
+          expect(result).not_to include(inaccessible_conversation)
+        end
+      end
+    end
   end
 end

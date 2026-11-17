@@ -24,6 +24,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
       message.update!(content: I18n.t('conversations.messages.deleted'), content_type: :text,
                       content_attributes: message.content_attributes.slice('forwarded_message_id').merge(deleted: true))
       message.attachments.destroy_all
+      AuditLog.record!(auditable: message, account: Current.account, action: 'destroy', user: Current.user,
+                       changes: { display_id: @conversation.display_id })
     end
   end
 

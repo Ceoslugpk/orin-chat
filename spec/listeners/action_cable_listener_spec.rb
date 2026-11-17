@@ -38,6 +38,32 @@ describe ActionCableListener do
     end
   end
 
+  describe '#account_permissions_changed' do
+    it 'sends a reload event to the affected user' do
+      event = Events::Base.new(:'account.permissions_changed', Time.zone.now, account: account, user_id: agent.id)
+
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        [agent.pubsub_token],
+        'account.permissions_changed',
+        { account_id: account.id }
+      )
+
+      listener.account_permissions_changed(event)
+    end
+
+    it 'supports notifying multiple users at once' do
+      event = Events::Base.new(:'account.permissions_changed', Time.zone.now, account: account, user_ids: [agent.id, admin.id])
+
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(agent.pubsub_token, admin.pubsub_token),
+        'account.permissions_changed',
+        { account_id: account.id }
+      )
+
+      listener.account_permissions_changed(event)
+    end
+  end
+
   describe '#account_cache_invalidated' do
     let!(:event) do
       Events::Base.new(
@@ -250,6 +276,17 @@ describe ActionCableListener do
     it 'sends message to account admins, inbox agents' do
       expect(ActionCableBroadcastJob).to receive(:perform_later).with(
         ["account_#{account.id}"],
+        'contact.deleted',
+        contact_data
+      )
+      listener.contact_deleted(event)
+    end
+
+    it 'targets individual users when custom roles are enabled' do
+      account.enable_features!(:custom_roles)
+
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(admin.pubsub_token, agent.pubsub_token),
         'contact.deleted',
         contact_data
       )

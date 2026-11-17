@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Description: Chatwoot installation script
+# Description: Orin Chat installation script
 # OS: Ubuntu 18.04 LTS
 # Script Version: 0.2
 
@@ -46,10 +46,10 @@ rvm autolibs disable
 rvm install "ruby-3.0.4"
 rvm use 3.0.4 --default
 
-git clone https://github.com/chatwoot/chatwoot.git
+git clone https://github.com/Ceoslugpk/orin-chat.git chatwoot
 cd chatwoot
 if [[ -z "$1" ]]; then
-  git checkout master;
+  git checkout main;
 else
   git checkout $1;
 fi
@@ -77,8 +77,8 @@ cp /home/chatwoot/chatwoot/deployment/chatwoot.target /etc/systemd/system/chatwo
 systemctl enable chatwoot.target
 systemctl start chatwoot.target
 
-echo "Woot! Woot!! Chatwoot server installation is complete"
+echo "Woot! Woot!! Orin Chat server installation is complete"
 echo "The server will be accessible at http://<server-ip>:3000"
-echo "To configure a domain and SSL certificate, follow the guide at https://www.chatwoot.com/docs/deployment/deploy-chatwoot-in-linux-vm"
+echo "To configure a domain and SSL certificate, follow the guide at https://github.com/Ceoslugpk/orin-chat"
 
 # TODO: Auto-configure Nginx with SSL certificate

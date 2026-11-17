@@ -1,4 +1,5 @@
 class Api::V1::Accounts::Actions::ContactMergesController < Api::V1::Accounts::BaseController
+  before_action :authorize_contact_merge, only: [:create]
   before_action :set_base_contact, only: [:create]
   before_action :set_mergee_contact, only: [:create]
 
@@ -14,6 +15,10 @@ class Api::V1::Accounts::Actions::ContactMergesController < Api::V1::Accounts::B
   end
 
   private
+
+  def authorize_contact_merge
+    authorize Contact, :update?
+  end
 
   def set_base_contact
     @base_contact = contacts.find(params[:base_contact_id])

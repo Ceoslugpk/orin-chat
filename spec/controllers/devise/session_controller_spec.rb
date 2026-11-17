@@ -47,6 +47,34 @@ RSpec.describe 'Session', type: :request do
         expect(response.body).to include(user.email)
       end
 
+      it 'records the sign-in in the audit log of each of the user accounts' do
+        post new_user_session_url, params: { email: user.email, password: 'Password1!' }, as: :json
+
+        log = AuditLog.for_account(account).find_by(auditable: user, action: 'sign_in')
+        expect(log.user).to eq(user)
+      end
+
+      it 'records the sign-out in the audit log' do
+        post new_user_session_url, params: { email: user.email, password: 'Password1!' }, as: :json
+        auth_headers = response.headers.slice('access-token', 'client', 'uid')
+
+        delete destroy_user_session_url, headers: auth_headers, as: :json
+
+        expect(AuditLog.for_account(account).find_by(auditable: user, action: 'sign_out')).to be_present
+      end
+
+      it 'does not attribute an impersonation sign-out to the target user' do
+        super_admin = create(:super_admin)
+        sso_token = user.generate_sso_auth_token(impersonated_by: super_admin)
+        post new_user_session_url, params: { email: user.email, sso_auth_token: sso_token }, as: :json
+        auth_headers = response.headers.slice('access-token', 'client', 'uid')
+
+        delete destroy_user_session_url, headers: auth_headers, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(AuditLog.for_account(account).where(auditable: user, action: %w[sign_in sign_out])).to be_empty
+      end
+
       it 'returns successful auth response with new password special characters' do
         params = { email: user_with_new_pwd.email, password: 'Password1!.><?' }
 

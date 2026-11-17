@@ -37,6 +37,9 @@ const records = computed(() => getters['auditlogs/getAuditLogs'].value);
 const uiFlags = computed(() => getters['auditlogs/getUIFlags'].value);
 const meta = computed(() => getters['auditlogs/getMeta'].value);
 const agentList = computed(() => getters['agents/getAgents'].value);
+const customRoleList = computed(
+  () => getters['customRole/getCustomRoles']?.value ?? []
+);
 
 const searchQuery = ref(route.query.q ?? '');
 // The search term this page last put in the URL. Echoes of our own navigation
@@ -83,7 +86,12 @@ const clearFilters = () => {
 };
 
 const generateLogText = auditLogItem => {
-  const payload = generateTranslationPayload(auditLogItem, agentList.value);
+  const payload = generateTranslationPayload(
+    auditLogItem,
+    agentList.value,
+    customRoleList.value,
+    t
+  );
   const translationKey = generateLogActionKey(auditLogItem);
 
   const joinIfArray = value => {
@@ -144,6 +152,7 @@ watch(
 
 onMounted(() => {
   store.dispatch('agents/get');
+  store.dispatch('customRole/getCustomRole');
   fetchAuditLogs();
 });
 </script>

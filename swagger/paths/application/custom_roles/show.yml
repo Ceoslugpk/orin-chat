@@ -1,0 +1,34 @@
+tags:
+  - Custom Roles
+operationId: get-custom-role
+summary: Get a custom role
+description: Get a custom role definition from the account
+security:
+  - userBearerAuth: []
+  - userApiKey: []
+parameters:
+  - in: path
+    name: id
+    schema:
+      type: integer
+    required: true
+    description: The ID of the custom role
+responses:
+  '200':
+    description: Success
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/custom_role'
+  '403':
+    description: Access denied
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'
+  '404':
+    description: Custom role not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'

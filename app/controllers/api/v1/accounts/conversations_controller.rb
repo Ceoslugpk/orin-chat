@@ -36,9 +36,9 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
                                 .per(ATTACHMENT_RESULTS_PER_PAGE)
   end
 
-  def show; end
-
   def create
+    authorize Conversation, :create?
+
     ActiveRecord::Base.transaction do
       @conversation = ConversationBuilder.new(params: params, contact_inbox: @contact_inbox).perform
       Messages::MessageBuilder.new(Current.user, @conversation, params[:message]).perform if params[:message].present?

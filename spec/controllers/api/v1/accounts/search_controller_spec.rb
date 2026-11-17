@@ -452,4 +452,50 @@ RSpec.describe 'Search', type: :request do
       end
     end
   end
+
+  describe 'custom role contact search' do
+    let(:restricted_agent) { create(:user, account: account, role: :agent) }
+
+    def link_custom_role(permissions)
+      account.enable_features!(:custom_roles)
+      restricted_agent.account_users.find_by!(account: account).update!(
+        custom_role: create(:custom_role, account: account, permissions: permissions)
+      )
+    end
+
+    it 'denies direct contact search without contact_manage' do
+      link_custom_role(['report_manage'])
+
+      get "/api/v1/accounts/#{account.id}/search/contacts",
+          headers: restricted_agent.create_new_auth_token,
+          params: { q: 'test' },
+          as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'omits contacts from the combined payload without contact_manage' do
+      link_custom_role(['report_manage'])
+
+      get "/api/v1/accounts/#{account.id}/search",
+          headers: restricted_agent.create_new_auth_token,
+          params: { q: 'test' },
+          as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(JSON.parse(response.body, symbolize_names: true)[:payload][:contacts]).to be_empty
+    end
+
+    it 'includes contacts when contact_manage is granted' do
+      link_custom_role(['contact_manage'])
+
+      get "/api/v1/accounts/#{account.id}/search",
+          headers: restricted_agent.create_new_auth_token,
+          params: { q: 'test' },
+          as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(JSON.parse(response.body, symbolize_names: true)[:payload][:contacts].length).to eq(1)
+    end
+  end
 end

@@ -83,4 +83,23 @@ describe Notification::PushNotificationService do
       end
     end
   end
+
+  context 'when a custom role loses conversation access before delivery' do
+    before do
+      account.enable_features!(:custom_roles)
+      user.account_users.find_by!(account: account).update!(
+        custom_role: create(:custom_role, account: account, permissions: ['contact_manage'])
+      )
+      create(:notification_subscription, :browser_push, user: user)
+      allow(WebPush).to receive(:payload_send)
+    end
+
+    it 'does not send push notifications' do
+      with_modified_env VAPID_PUBLIC_KEY: 'test' do
+        described_class.new(notification: notification).perform
+      end
+
+      expect(WebPush).not_to have_received(:payload_send)
+    end
+  end
 end
