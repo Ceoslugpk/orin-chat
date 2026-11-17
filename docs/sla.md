@@ -35,14 +35,20 @@ re-implemented.
   recording first-response and resolution miss events (without duplicates)
   and the completion time. Reopening a completed conversation restores
   `active` or `active_with_misses` and clears the completion time.
+- Conversation API payloads expose the current `applied_sla` (with policy
+  name, status, completion and due times) and its `sla_events` when the
+  account flag is enabled. Conversation lists preload applied SLAs and their
+  events while tracking is enabled, so the status card does not add
+  per-conversation queries.
 
 ## Not implemented yet
 
-- Conversation serialization of the current applied SLA and its events.
 - Next-response miss detection. FRT and RT misses are evaluated at
   resolution; NRT requires per-waiting-cycle tracking and breach jobs.
 - Breach detection while a conversation is still open (jobs), miss
-  notifications and the dashboard SLA status card.
+  notifications and the dashboard SLA status card's live updates (the card
+  renders from API data today; realtime payloads do not include SLA fields
+  yet).
 - Business-hours calculation for policies applied while the inbox is closed
   is implemented for due timestamps; holiday and audit-grade timezone
   coverage still needs verification.

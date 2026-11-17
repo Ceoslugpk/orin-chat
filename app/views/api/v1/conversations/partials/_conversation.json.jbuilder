@@ -71,4 +71,17 @@ json.priority conversation.priority
 json.waiting_since conversation.waiting_since.to_i.to_i
 sla_applicable = conversation.account.feature_enabled?('sla') && (!conversation.respond_to?(:sla_applicable?) || conversation.sla_applicable?)
 json.sla_policy_id sla_applicable ? conversation.sla_policy_id : nil
+if sla_applicable
+  applied_sla = conversation.applied_sla
+  if applied_sla
+    json.applied_sla do
+      json.partial! 'api/v1/models/applied_sla', formats: [:json], applied_sla: applied_sla
+    end
+  else
+    json.applied_sla nil
+  end
+  json.sla_events conversation.current_sla_events do |sla_event|
+    json.partial! 'api/v1/models/sla_event', formats: [:json], sla_event: sla_event
+  end
+end
 json.partial! 'enterprise/api/v1/conversations/partials/conversation', conversation: conversation if ChatwootApp.enterprise?

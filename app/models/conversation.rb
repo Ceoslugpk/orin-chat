@@ -267,6 +267,20 @@ class Conversation < ApplicationRecord
     "#{ENV.fetch('FRONTEND_URL', nil)}/survey/responses/#{uuid}"
   end
 
+  def applied_sla
+    return if sla_policy_id.blank?
+
+    if applied_slas.loaded?
+      applied_slas.detect { |record| record.sla_policy_id == sla_policy_id }
+    else
+      applied_slas.find_by(sla_policy_id: sla_policy_id)
+    end
+  end
+
+  def current_sla_events
+    applied_sla ? applied_sla.sla_events.to_a : []
+  end
+
   def dispatch_conversation_updated_event(previous_changes = nil)
     dispatcher_dispatch(CONVERSATION_UPDATED, previous_changes)
   end

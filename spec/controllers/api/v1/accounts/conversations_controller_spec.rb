@@ -375,6 +375,37 @@ RSpec.describe 'Conversations API', type: :request do
         expect(response).to have_http_status(:success)
         expect(JSON.parse(response.body, symbolize_names: true)[:id]).to eq(conversation.display_id)
       end
+
+      it 'includes the applied SLA and its events when tracking is enabled' do
+        account.enable_features!('sla')
+        sla_policy = create(:sla_policy, account: account, first_response_time_threshold: 3600)
+        conversation.update!(sla_policy: sla_policy)
+        create(:sla_event, applied_sla: conversation.applied_sla, conversation: conversation,
+                           account: account, inbox: conversation.inbox, sla_policy: sla_policy)
+
+        get "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}",
+            headers: administrator.create_new_auth_token,
+            as: :json
+
+        body = JSON.parse(response.body, symbolize_names: true)
+        expect(body[:applied_sla]).to include(sla_name: sla_policy.name, sla_status: 'active')
+        expect(body[:applied_sla][:sla_frt_due_at]).to be_present
+        expect(body[:sla_events].pluck(:event_type)).to eq(['frt'])
+      end
+
+      it 'omits SLA payloads when tracking is disabled' do
+        applied_sla = create(:applied_sla, account: account, conversation: conversation,
+                                           sla_policy: create(:sla_policy, account: account))
+
+        get "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}",
+            headers: administrator.create_new_auth_token,
+            as: :json
+
+        body = JSON.parse(response.body, symbolize_names: true)
+        expect(applied_sla).to be_persisted
+        expect(body).not_to have_key(:applied_sla)
+        expect(body).not_to have_key(:sla_events)
+      end
     end
 
     context 'when it is an authenticated bot' do
