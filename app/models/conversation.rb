@@ -271,7 +271,8 @@ class Conversation < ApplicationRecord
     return if sla_policy_id.blank?
 
     if applied_slas.loaded?
-      applied_slas.detect { |record| record.sla_policy_id == sla_policy_id }
+      applied_slas.detect { |record| record.sla_policy_id == sla_policy_id } ||
+        applied_slas.find_by(sla_policy_id: sla_policy_id)
     else
       applied_slas.find_by(sla_policy_id: sla_policy_id)
     end
@@ -295,6 +296,7 @@ class Conversation < ApplicationRecord
     notify_conversation_updation
     apply_sla_policy_change
     update_sla_completion
+    update_sla_next_response
   end
 
   def handle_resolved_status_change
@@ -318,6 +320,10 @@ class Conversation < ApplicationRecord
     else
       Sla::ReopenPolicyService.new(self).perform
     end
+  end
+
+  def update_sla_next_response
+    Sla::NextResponseService.new(self).perform if saved_change_to_waiting_since?
   end
 
   def ensure_snooze_until_reset

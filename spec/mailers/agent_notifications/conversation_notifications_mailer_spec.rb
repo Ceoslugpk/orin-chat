@@ -43,6 +43,51 @@ RSpec.describe AgentNotifications::ConversationNotificationsMailer do
     end
   end
 
+  describe 'sla_missed_first_response' do
+    let(:sla_policy) { create(:sla_policy, account: account, name: 'Premium SLA') }
+    let(:mail) { described_class.with(account: account).sla_missed_first_response(conversation, agent, nil).deliver_now }
+
+    before do
+      account.enable_features!('sla')
+      conversation.update!(sla_policy: sla_policy)
+    end
+
+    it 'renders the subject and policy name' do
+      expect(mail.subject).to eq("#{agent.available_name}, SLA first response missed for conversation [ID - #{conversation.display_id}]")
+      expect(mail.body.encoded).to include('Premium SLA')
+    end
+  end
+
+  describe 'sla_missed_next_response' do
+    let(:sla_policy) { create(:sla_policy, account: account, name: 'Premium SLA') }
+    let(:mail) { described_class.with(account: account).sla_missed_next_response(conversation, agent, nil).deliver_now }
+
+    before do
+      account.enable_features!('sla')
+      conversation.update!(sla_policy: sla_policy)
+    end
+
+    it 'renders the subject and policy name' do
+      expect(mail.subject).to eq("#{agent.available_name}, SLA next response missed for conversation [ID - #{conversation.display_id}]")
+      expect(mail.body.encoded).to include('Premium SLA')
+    end
+  end
+
+  describe 'sla_missed_resolution' do
+    let(:sla_policy) { create(:sla_policy, account: account, name: 'Premium SLA') }
+    let(:mail) { described_class.with(account: account).sla_missed_resolution(conversation, agent, nil).deliver_now }
+
+    before do
+      account.enable_features!('sla')
+      conversation.update!(sla_policy: sla_policy)
+    end
+
+    it 'renders the subject and policy name' do
+      expect(mail.subject).to eq("#{agent.available_name}, SLA resolution time missed for conversation [ID - #{conversation.display_id}]")
+      expect(mail.body.encoded).to include('Premium SLA')
+    end
+  end
+
   describe 'conversation_mention' do
     let(:contact) { create(:contact, name: nil, account: account) }
     let(:another_agent) { create(:user, email: 'agent2@example.com', account: account) }

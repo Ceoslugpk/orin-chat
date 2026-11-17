@@ -1,0 +1,2 @@
+class SlaPolicyDrop < BaseDrop
+end

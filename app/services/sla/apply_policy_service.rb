@@ -15,6 +15,7 @@ class Sla::ApplyPolicyService
 
     applied_sla.assign_attributes(due_attributes(policy))
     applied_sla.save!
+    Sla::ScheduleBreachChecksService.new(applied_sla).perform
     complete_if_resolved
     applied_sla
   end
@@ -31,50 +32,22 @@ class Sla::ApplyPolicyService
   end
 
   def due_attributes(policy)
+    calculator = Sla::DueAtCalculator.new(policy: policy, inbox: conversation.inbox)
     {
       sla_status: :active,
-      sla_frt_due_at: due_at(policy, policy.first_response_time_threshold),
-      sla_nrt_due_at: due_at(policy, policy.next_response_time_threshold),
-      sla_rt_due_at: due_at(policy, policy.resolution_time_threshold)
+      sla_frt_due_at: calculator.add(policy.first_response_time_threshold),
+      sla_nrt_due_at: next_response_due_at(policy, calculator),
+      sla_rt_due_at: calculator.add(policy.resolution_time_threshold)
     }
+  end
+
+  def next_response_due_at(policy, calculator)
+    return if conversation.first_reply_created_at.blank? || conversation.waiting_since.blank?
+
+    calculator.add(policy.next_response_time_threshold, from: conversation.waiting_since)
   end
 
   def complete_if_resolved
     Sla::CompletePolicyService.new(conversation).perform if conversation.resolved?
-  end
-
-  def applied_at
-    @applied_at ||= Time.current
-  end
-
-  def due_at(policy, threshold)
-    return if threshold.blank?
-    return applied_at + threshold.seconds unless policy.only_during_business_hours
-
-    inbox = conversation.inbox
-    return applied_at + threshold.seconds unless inbox.working_hours_enabled?
-
-    WorkingHours::Config.with_config(working_hours: working_hours(inbox), time_zone: inbox.timezone) do
-      WorkingHours.add_seconds(applied_at.in_time_zone(inbox.timezone), threshold)
-    end
-  end
-
-  def working_hours(inbox)
-    inbox.working_hours.each_with_object({}) do |working_hour, config|
-      next if working_hour.closed_all_day?
-
-      config[week_day(working_hour.day_of_week)] = {
-        format_time(working_hour.open_hour, working_hour.open_minutes) =>
-          format_time(working_hour.close_hour, working_hour.close_minutes)
-      }
-    end
-  end
-
-  def week_day(day_of_week)
-    %i[sun mon tue wed thu fri sat][day_of_week]
-  end
-
-  def format_time(hour, minute)
-    format('%<hour>02d:%<minute>02d', hour: hour, minute: minute)
   end
 end

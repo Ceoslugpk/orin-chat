@@ -37,6 +37,17 @@ RSpec.describe Sla::ApplyPolicyService do
     expect { conversation.update!(sla_policy: policy) }.not_to change(AppliedSla, :count)
   end
 
+  it 'schedules breach checks for the configured due times' do
+    account.enable_features!('sla')
+
+    conversation.update!(sla_policy: policy)
+
+    applied_sla = conversation.applied_slas.find_by!(sla_policy: policy)
+    expect(Sla::BreachJob).to have_been_enqueued.with(applied_sla.id, :frt)
+    expect(Sla::BreachJob).to have_been_enqueued.with(applied_sla.id, :rt)
+    expect(Sla::BreachJob).not_to have_been_enqueued.with(applied_sla.id, :nrt)
+  end
+
   it 'respects business hours when the policy requires them' do
     account.enable_features!('sla')
     inbox.update!(working_hours_enabled: true)

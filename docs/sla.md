@@ -47,21 +47,28 @@ re-implemented.
   applied SLAs, conversations with misses (`missed`/`active_with_misses`)
   and the hit rate; download returns a CSV matching the existing locale
   headers.
+- Breach checks are scheduled for each applied due time and re-check the
+  conversation state when they run: first response only when no in-time
+  reply exists, next response only while the customer is still waiting, and
+  resolution only while unresolved. Miss events are recorded once per
+  deadline (NRT once per waiting cycle) and notify the assignee, falling
+  back to inbox members.
+- Next-response deadlines are recomputed from `waiting_since` after the
+  first reply and cleared when the waiting period ends. Miss notifications
+  use the existing in-app/email/push notification settings and mailer
+  templates, including the policy name.
 
 ## Not implemented yet
 
-- Next-response miss detection. FRT and RT misses are evaluated at
-  resolution; NRT requires per-waiting-cycle tracking and breach jobs.
-- Breach detection while a conversation is still open (jobs), miss
-  notifications and the dashboard SLA status card's live updates (the card
-  renders from API data today; realtime payloads do not include SLA fields
-  yet).
+- Realtime SLA fields in websocket payloads; the dashboard updates SLA data
+  on API loads and message-driven conversation refreshes.
 - Business-hours calculation for policies applied while the inbox is closed
   is implemented for due timestamps; holiday and audit-grade timezone
   coverage still needs verification.
 - Automation UI exposure for self-hosted accounts (the dashboard action is
   still gated on a cloud check) and end-to-end policy assignment through the
   automation builder.
+- Live SLA updates in realtime payloads and full browser lifecycle coverage.
 - Dashboard validation of policy names and thresholds beyond the existing
   client-side rules.
 

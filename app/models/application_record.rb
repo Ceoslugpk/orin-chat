@@ -9,7 +9,7 @@ class ApplicationRecord < ActiveRecord::Base
 
   # the models that exposed in email templates through liquid
   def droppables
-    %w[Account Channel Conversation Inbox User Message]
+    %w[Account Channel Conversation Inbox User Message SlaPolicy]
   end
 
   # ModelDrop class should exist in app/drops
