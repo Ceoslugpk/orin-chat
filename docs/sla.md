@@ -57,18 +57,16 @@ re-implemented.
   first reply and cleared when the waiting period ends. Miss notifications
   use the existing in-app/email/push notification settings and mailer
   templates, including the policy name.
+- Realtime conversation payloads include the current applied SLA and its
+  events while the account flag is enabled, so message-driven updates keep
+  the SLA card current. The SLA settings and reports routes, sidebar entries
+  and report route guard all follow the account `sla` flag.
 
 ## Not implemented yet
 
-- Realtime SLA fields in websocket payloads; the dashboard updates SLA data
-  on API loads and message-driven conversation refreshes.
-- Business-hours calculation for policies applied while the inbox is closed
-  is implemented for due timestamps; holiday and audit-grade timezone
-  coverage still needs verification.
-- Automation UI exposure for self-hosted accounts (the dashboard action is
-  still gated on a cloud check) and end-to-end policy assignment through the
-  automation builder.
-- Live SLA updates in realtime payloads and full browser lifecycle coverage.
+- Holiday and audit-grade timezone coverage for business-hour calculations
+  still needs verification.
+- Full browser lifecycle coverage and activation of the feature flag.
 - Dashboard validation of policy names and thresholds beyond the existing
   client-side rules.
 

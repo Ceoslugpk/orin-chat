@@ -18,11 +18,25 @@ class AppliedSla < ApplicationRecord
     joins(:conversation).where(conversations: { assignee_id: assignee_id }) if assignee_id.present?
   }
   scope :filter_by_labels, lambda { |labels|
-    where(conversation_id: Conversation.tagged_with(labels, any: true).ids) if labels.present?
+    next if labels.blank?
+
+    where(conversation_id: Conversation.tagged_with(labels, any: true).ids)
   }
 
   validates :sla_policy_id, uniqueness: { scope: [:account_id, :conversation_id] }
   validate :related_records_share_account
+
+  def push_event_data
+    {
+      id: id,
+      sla_name: sla_policy.name,
+      sla_status: sla_status,
+      sla_completed_at: completed_at&.to_i,
+      sla_frt_due_at: sla_frt_due_at&.to_i,
+      sla_nrt_due_at: sla_nrt_due_at&.to_i,
+      sla_rt_due_at: sla_rt_due_at&.to_i
+    }
+  end
 
   private
 
