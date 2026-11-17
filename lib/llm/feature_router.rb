@@ -22,7 +22,12 @@ module Llm::FeatureRouter
       return unless Llm::Models.provider_for(model) == 'openai' && standard_openai_endpoint?
 
       effort = Llm::Models.features.dig(feature.to_s, 'reasoning_effort') || Llm::Models.model_config(model)&.dig('reasoning_effort')
-      effort.to_sym if RubyLLM.models.find(model).reasoning_option_values(:effort).include?(effort)
+      return if effort.blank?
+
+      values = RubyLLM.models.find(model).reasoning_option_values(:effort)
+      effort.to_sym if values.include?(effort)
+    rescue StandardError
+      nil
     end
 
     def standard_openai_endpoint?

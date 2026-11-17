@@ -83,12 +83,6 @@ class Integrations::LlmBaseService
     self.class::CACHEABLE_EVENTS.include?(event_name)
   end
 
-  def api_base
-    endpoint = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value.presence || 'https://api.openai.com/'
-    endpoint = endpoint.chomp('/')
-    "#{endpoint}/v1"
-  end
-
   def make_api_call(body)
     parsed_body = JSON.parse(body)
     instrumentation_params = build_instrumentation_params(parsed_body)
@@ -101,15 +95,24 @@ class Integrations::LlmBaseService
   def execute_ruby_llm_request(parsed_body)
     messages = parsed_body['messages']
     model = parsed_body['model']
-    credential = llm_credential
+    provider = Llm::Models.provider_for(model) || 'openai'
+    credential = llm_credential(provider: provider)
 
-    Llm::Config.with_api_key(credential[:api_key], api_base: api_base) do |context|
+    with_llm_context(provider: provider, credential: credential) do |context|
       chat = context.chat(model: model)
       setup_chat_with_messages(chat, messages)
     end
   rescue StandardError => e
     capture_llm_exception(e, credential: credential)
     build_error_response_from_exception(e, messages)
+  end
+
+  def with_llm_context(provider:, credential:, &)
+    if provider.to_s == 'openai'
+      Llm::Config.with_api_key(credential[:api_key], api_base: credential[:api_base], &)
+    else
+      Llm::Config.with_credentials(provider: provider, api_key: credential[:api_key], api_base: credential[:api_base], &)
+    end
   end
 
   def setup_chat_with_messages(chat, messages)
@@ -166,8 +169,20 @@ class Integrations::LlmBaseService
     }
   end
 
-  def llm_credential
-    @llm_credential ||= { api_key: hook.settings['api_key'], source: :hook }
+  def llm_credential(provider: 'openai')
+    @llm_credentials ||= {}
+    @llm_credentials[provider.to_s] ||= if hook&.settings&.dig('api_key').present?
+                                          endpoint = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value.presence
+                                          { api_key: hook.settings['api_key'], api_base: endpoint, provider: provider.to_s, source: :hook }
+                                        else
+                                          credentials = Llm::Config.credentials_for(provider)
+                                          {
+                                            api_key: credentials[:api_key],
+                                            api_base: credentials[:api_base],
+                                            provider: provider.to_s,
+                                            source: :system
+                                          }
+                                        end
   end
 
   def exception_tracking_account

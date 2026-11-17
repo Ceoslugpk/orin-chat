@@ -64,6 +64,25 @@ RSpec.describe 'Super Admin Application Config API', type: :request do
         expect(flash[:notice]).to be_blank
       end
 
+      it 'updates provider-specific captain credentials' do
+        sign_in(super_admin, scope: :super_admin)
+        post '/super_admin/app_config?config=captain', params: {
+          app_config: {
+            CAPTAIN_ANTHROPIC_API_KEY: 'anthropic-key',
+            CAPTAIN_ANTHROPIC_ENDPOINT: 'https://api.anthropic.com',
+            CAPTAIN_GEMINI_API_KEY: 'gemini-key',
+            CAPTAIN_GEMINI_ENDPOINT: 'https://generativelanguage.googleapis.com'
+          }
+        }
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to(super_admin_app_config_path(config: 'captain'))
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_ANTHROPIC_API_KEY').value).to eq('anthropic-key')
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_ANTHROPIC_ENDPOINT').value).to eq('https://api.anthropic.com')
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_GEMINI_API_KEY').value).to eq('gemini-key')
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_GEMINI_ENDPOINT').value).to eq('https://generativelanguage.googleapis.com')
+      end
+
       it 'rejects invalid Shopify Partner configuration before persisting any submitted value' do
         create(:installation_config, name: 'SHOPIFY_PARTNER_ORGANIZATION_ID', value: '123', locked: false)
         sign_in(super_admin, scope: :super_admin)
