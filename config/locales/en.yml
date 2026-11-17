@@ -114,6 +114,8 @@ en:
         missing: does not exist
         account_mismatch: must belong to the membership account
         agent_only: can only be linked to an agent; clear it before changing the built-in role
+    sla_policy:
+      at_least_one_threshold: must include at least one response or resolution time threshold
     account:
       not_authorized: You are not authorized to access this account
       email_limit_exceeded: The daily email limit for this account has been reached

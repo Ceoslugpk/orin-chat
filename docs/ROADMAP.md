@@ -53,7 +53,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 |---|---|---|---|
 | 1.1 | Audit logs | 🚧 | Backend/API and dashboard integrated; assembled tests/lint/build and browser smoke checks passed. Query plans inspected on 50,000 synthetic rows. Remaining change-rendering/lifecycle coverage and operational limits tracked in [Audit Logs](audit-logs.md). |
 | 1.2 | Custom roles & permissions | ✅ | One custom role per agent; permissions: all/unassigned/participating conversations, contacts, reports, knowledge base; enforced in policies, REST scopes, realtime delivery and the dashboard. Enabled by default for new installations; existing accounts opt in from Super Admin. See [Custom Roles](custom-roles.md). |
-| 1.3 | SLA policies | ⬜ | First/next response and resolution targets, business hours, applied via automations, breach events and notifications, SLA reports |
+| 1.3 | SLA policies | 🚧 | Account-scoped policy definitions with validated response/resolution thresholds and administrator-only CRUD are implemented; the paywall is replaced by an honest unavailable state. Application to conversations, business-hours calculation, breach events, notifications and reports remain. See [SLA](sla.md). |
 | 1.4 | Agent capacity & balanced assignment | ⬜ | Per-inbox conversation limits, balanced vs round-robin, exclusion rules |
 | 1.5 | Required attributes on resolve | ⬜ | Block manual resolve until chosen custom attributes are filled |
 | 1.6 | Merge & link conversations | ⬜ | Permanent merge with history; linked/related conversations |
