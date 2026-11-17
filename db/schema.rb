@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_17_182708) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_17_184858) do
   # These extensions should be enabled to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -872,6 +872,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_17_182708) do
     t.index ["identifier", "account_id"], name: "uniq_identifier_per_account_contact", unique: true
     t.index ["name", "email", "phone_number", "identifier"], name: "index_contacts_on_name_email_phone_number_identifier", opclass: :gin_trgm_ops, using: :gin
     t.index ["phone_number", "account_id"], name: "index_contacts_on_phone_number_and_account_id"
+  end
+
+  create_table "conversation_links", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "linked_conversation_id", null: false
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_conversation_links_on_account_id"
+    t.index ["conversation_id", "linked_conversation_id"], name: "index_conversation_links_on_pair", unique: true
+    t.index ["conversation_id"], name: "index_conversation_links_on_conversation_id"
+    t.index ["created_by_id"], name: "index_conversation_links_on_created_by_id"
+    t.index ["linked_conversation_id"], name: "index_conversation_links_on_linked_conversation_id"
   end
 
   create_table "conversation_monitor_automation_deliveries", force: :cascade do |t|

@@ -127,6 +127,10 @@ class Conversation < ApplicationRecord
 
   has_many :mentions, dependent: :destroy_async
   has_many :messages, dependent: :destroy_async, autosave: true
+  has_many :conversation_links, dependent: :destroy_async
+  has_many :incoming_conversation_links, class_name: 'ConversationLink',
+                                         foreign_key: :linked_conversation_id, dependent: :destroy_async,
+                                         inverse_of: :linked_conversation
   has_many :applied_slas, dependent: :destroy_async
   has_many :sla_events, dependent: :destroy_async
   has_one :csat_survey_response, dependent: :destroy_async
@@ -280,6 +284,15 @@ class Conversation < ApplicationRecord
 
   def current_sla_events
     applied_sla ? applied_sla.sla_events.to_a : []
+  end
+
+  def linked_conversations
+    ids = ConversationLink.where('conversation_id = :id OR linked_conversation_id = :id', id: id)
+                          .pluck(:conversation_id, :linked_conversation_id)
+                          .flatten
+                          .uniq
+                          .excluding(id)
+    Conversation.where(id: ids)
   end
 
   def dispatch_conversation_updated_event(previous_changes = nil)

@@ -216,6 +216,7 @@ Rails.application.routes.draw do
               resource :contact_info_request, only: [:show, :create]
               resources :assignments, only: [:create]
               resources :labels, only: [:create, :index]
+              resources :links, only: [:index, :create, :destroy]
               resource :participants, only: [:show, :create, :update, :destroy]
               resource :direct_uploads, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
@@ -230,6 +231,7 @@ Rails.application.routes.draw do
               post :transcript
               post :toggle_status
               post :toggle_priority
+              post :merge, to: 'conversations/merges#create'
               post :toggle_typing_status
               post :update_last_seen
               post :unread

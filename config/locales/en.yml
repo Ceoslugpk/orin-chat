@@ -118,6 +118,9 @@ en:
       at_least_one_threshold: must include at least one response or resolution time threshold
     conversation:
       required_attributes_missing: Fill the required conversation attributes before resolving.
+      merge_same_conversation: Select a different conversation to merge
+      merge_account_mismatch: Conversations must belong to the same account
+      merge_contact_mismatch: Only conversations with the same contact can be merged
     account:
       not_authorized: You are not authorized to access this account
       email_limit_exceeded: The daily email limit for this account has been reached
@@ -452,6 +455,7 @@ en:
       sla:
         added: '%{user_name} added SLA policy %{sla_name}'
         removed: '%{user_name} removed SLA policy %{sla_name}'
+      merged: 'Conversation #%{source_id} was merged by %{user_name}'
       linear:
         issue_created: 'Linear issue %{issue_id} was created by %{user_name}'
         issue_linked: 'Linear issue %{issue_id} was linked by %{user_name}'

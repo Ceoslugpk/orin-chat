@@ -181,6 +181,26 @@
         "TURNED_ON": "Auto-translate is on for this conversation",
         "UPDATE_FAILED": "Could not change auto-translate for this conversation. Please try again."
       },
+      "RELATED": {
+        "TITLE": "Related conversations",
+        "DESCRIPTION": "Link conversations for context, or merge another conversation into this one. Merging is permanent and moves all messages.",
+        "LOADING": "Loading conversations...",
+        "LINKED_TITLE": "Linked conversations",
+        "EMPTY_LINKED": "No linked conversations",
+        "OTHER_TITLE": "Other conversations with this contact",
+        "EMPTY_OTHER": "No other conversations with this contact",
+        "LINK": "Link",
+        "UNLINK": "Unlink",
+        "MERGE": "Merge",
+        "CONFIRM_MERGE_TITLE": "Merge permanently?",
+        "CONFIRM_MERGE_DESCRIPTION": "Messages and history from conversation #{id} will move into this conversation, and the other conversation will be removed.",
+        "CONFIRM_MERGE_BUTTON": "Merge permanently",
+        "CANCEL": "Cancel",
+        "LINK_SUCCESS": "Conversation linked",
+        "UNLINK_SUCCESS": "Conversation unlinked",
+        "MERGE_SUCCESS": "Conversation merged",
+        "ERROR": "Could not update related conversations"
+      },
       "SLA_STATUS": {
         "FRT": "FRT {status}",
         "NRT": "NRT {status}",
