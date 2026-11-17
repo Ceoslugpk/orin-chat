@@ -40,6 +40,13 @@ re-implemented.
   account flag is enabled. Conversation lists preload applied SLAs and their
   events while tracking is enabled, so the status card does not add
   per-conversation queries.
+- Reports backend at `/api/v1/accounts/:account_id/applied_slas`
+  (`index`, `metrics`, `download`), available to administrators and custom
+  roles with report access while the account flag is enabled. Supports date
+  range, policy, agent, inbox, team and label filters. Metrics report total
+  applied SLAs, conversations with misses (`missed`/`active_with_misses`)
+  and the hit rate; download returns a CSV matching the existing locale
+  headers.
 
 ## Not implemented yet
 
@@ -55,8 +62,6 @@ re-implemented.
 - Automation UI exposure for self-hosted accounts (the dashboard action is
   still gated on a cloud check) and end-to-end policy assignment through the
   automation builder.
-- Reporting (`applied_slas` index/metrics/download endpoints) and the SLA
-  reports screen.
 - Dashboard validation of policy names and thresholds beyond the existing
   client-side rules.
 
