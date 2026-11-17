@@ -195,8 +195,8 @@
   premium: true
 - name: advanced_search
   display_name: Advanced Search
-  enabled: false
-  premium: true
+  enabled: true
+  premium: false
 - name: saml
   display_name: SAML
   enabled: true
