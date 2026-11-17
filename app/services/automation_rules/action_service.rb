@@ -62,4 +62,11 @@ class AutomationRules::ActionService < ActionService
       @account.increment_email_sent_count
     end
   end
+
+  def add_sla(sla_policy_ids)
+    return unless @account.feature_enabled?('sla')
+
+    policy = @account.sla_policies.find_by(id: Array(sla_policy_ids).first)
+    @conversation.update!(sla_policy_id: policy.id) if policy
+  end
 end

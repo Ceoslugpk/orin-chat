@@ -273,19 +273,36 @@ RSpec.describe AutomationRules::ActionService do
       end
     end
 
-    describe '#perform with assign_agent action' do
+    describe '#perform with add_sla action' do
+      let(:sla_policy) { create(:sla_policy, account: account) }
+
       before do
-        create(:inbox_member, inbox: conversation.inbox, user: agent)
-        rule.actions << { action_name: 'assign_agent', action_params: ['last_responding_agent'] }
+        account.enable_features!('sla')
+        rule.actions << { action_name: 'add_sla', action_params: [sla_policy.id] }
       end
 
-      it 'assigns the conversation to the last responding agent' do
-        create(:message, message_type: :outgoing, account: account,
-                         inbox: conversation.inbox, conversation: conversation, sender: agent)
+      it 'assigns and applies the account policy' do
+        described_class.new(rule, account, conversation).perform
+
+        expect(conversation.reload.sla_policy).to eq(sla_policy)
+        expect(conversation.applied_slas.find_by(sla_policy: sla_policy)).to be_present
+      end
+
+      it 'ignores the action when the feature is disabled' do
+        account.disable_features!('sla')
 
         described_class.new(rule, account, conversation).perform
 
-        expect(conversation.reload.assignee).to eq(agent)
+        expect(conversation.reload.sla_policy_id).to be_nil
+      end
+
+      it 'ignores a policy owned by another account' do
+        foreign_policy = create(:sla_policy)
+        rule.update!(actions: [{ action_name: 'add_sla', action_params: [foreign_policy.id] }])
+
+        described_class.new(rule, account, conversation).perform
+
+        expect(conversation.reload.sla_policy_id).to be_nil
       end
     end
   end

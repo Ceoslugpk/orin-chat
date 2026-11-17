@@ -1,5 +1,7 @@
 class SlaPolicy < ApplicationRecord
   belongs_to :account
+  has_many :applied_slas, dependent: :restrict_with_error
+  has_many :sla_events, dependent: :restrict_with_error
   has_many :conversations, dependent: :nullify
 
   validates :name, presence: true, length: { minimum: 2, maximum: 255 }

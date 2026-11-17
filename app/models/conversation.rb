@@ -127,6 +127,8 @@ class Conversation < ApplicationRecord
 
   has_many :mentions, dependent: :destroy_async
   has_many :messages, dependent: :destroy_async, autosave: true
+  has_many :applied_slas, dependent: :destroy_async
+  has_many :sla_events, dependent: :destroy_async
   has_one :csat_survey_response, dependent: :destroy_async
   has_many :conversation_participants, dependent: :destroy_async
   has_many :notifications, as: :primary_actor, dependent: :destroy_async
@@ -277,6 +279,7 @@ class Conversation < ApplicationRecord
     create_activity
     invalidate_filtered_unread_count_conversation
     notify_conversation_updation
+    Sla::ApplyPolicyService.new(self).perform if saved_change_to_sla_policy_id?
   end
 
   def handle_resolved_status_change

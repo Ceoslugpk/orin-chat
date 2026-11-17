@@ -22,16 +22,33 @@ re-implemented.
 - The dashboard settings screen now explains that tracking is not available
   yet instead of showing an upgrade/paywall path. The `sla` account feature
   flag stays disabled, so the screen remains hidden from navigation.
+- `AppliedSla` and `SlaEvent` records with status and event enums, account
+  consistency validation and per-policy/conversation uniqueness. Due
+  timestamps for first response, next response and resolution are stored on
+  the applied record.
+- Applying a policy to a conversation creates one active applied SLA with
+  business-hours-aware due times when the policy requires them. The
+  `add_sla` automation action assigns an account-owned policy; both the
+  action and the conversation callback do nothing while the `sla` account
+  flag is disabled.
 
 ## Not implemented yet
 
-- Applying a policy to conversations and tracking first/next/resolution
-  deadlines (`applied_slas`, `sla_events`).
-- Business-hours calculation, breach events, notifications and reporting
-  (`applied_slas` index/metrics/download endpoints).
-- Automation integration for assigning a policy to conversations.
-- Dashboard validation beyond the existing client-side rules, and the SLA
+- Conversation serialization of the current applied SLA and its events.
+- First/next/resolution hit, miss and completion transitions, including
+  reopening after resolution, `active_with_misses`, and first-response/
+  next-response/resolution event recording.
+- Miss notifications and the dashboard SLA status card.
+- Business-hours calculation for policies applied while the inbox is closed
+  is implemented for due timestamps; holiday and audit-grade timezone
+  coverage still needs verification.
+- Automation UI exposure for self-hosted accounts (the dashboard action is
+  still gated on a cloud check) and end-to-end policy assignment through the
+  automation builder.
+- Reporting (`applied_slas` index/metrics/download endpoints) and the SLA
   reports screen.
+- Dashboard validation of policy names and thresholds beyond the existing
+  client-side rules.
 
 Until those paths exist and are verified, the `sla` feature flag stays off
 and no upgrade or payment path is shown.
