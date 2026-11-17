@@ -231,8 +231,8 @@
   enabled: true
 - name: conversation_required_attributes
   display_name: Required Conversation Attributes
-  enabled: false
-  premium: true
+  enabled: true
+  premium: false
 - name: advanced_assignment
   display_name: Advanced Assignment
   enabled: true

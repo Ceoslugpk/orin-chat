@@ -49,6 +49,31 @@ RSpec.describe Macros::ExecutionService, type: :service do
     end
   end
 
+  describe 'required attributes on resolution' do
+    before do
+      account.enable_features!('conversation_required_attributes')
+      account.update!(settings: account.settings.merge('conversation_required_attributes' => ['order_id']))
+      create(:custom_attribute_definition, account: account, attribute_key: 'order_id',
+                                           attribute_model: :conversation_attribute,
+                                           attribute_display_type: :text)
+      allow(macro).to receive(:actions).and_return([{ action_name: 'resolve_conversation', action_params: [] }])
+    end
+
+    it 'does not resolve through a macro while attributes are missing' do
+      service.perform
+
+      expect(conversation.reload).to be_open
+    end
+
+    it 'resolves through a macro once attributes are filled' do
+      conversation.update!(custom_attributes: { 'order_id' => 'ORD-42' })
+
+      described_class.new(macro, conversation, user).perform
+
+      expect(conversation.reload).to be_resolved
+    end
+  end
+
   describe '#assign_team' do
     let(:team) { create(:team, account: account, allow_auto_assign: false) }
 

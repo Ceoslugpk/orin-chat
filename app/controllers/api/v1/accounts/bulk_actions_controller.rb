@@ -1,5 +1,6 @@
 class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseController
   before_action :validate_assignment_targets, only: :create, if: -> { normalized_type == 'Conversation' }
+  before_action :validate_required_attributes, only: :create, if: -> { resolving_conversations? }
 
   def create
     case normalized_type
@@ -32,6 +33,26 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
     return if [nil, 0, '0'].include?(team_id) || @current_account.teams.exists?(id: team_id)
 
     render_could_not_create_error('Invalid team_id')
+  end
+
+  def resolving_conversations?
+    normalized_type == 'Conversation' && conversation_params.dig(:fields, :status).to_s == 'resolved'
+  end
+
+  def validate_required_attributes
+    scope = @current_account.conversations.where(display_id: params[:ids])
+    scope = Conversations::PermissionFilterService.new(scope, current_user, @current_account).perform
+
+    missing = scope.filter_map do |conversation|
+      attributes = Conversations::RequiredAttributesService.new(conversation).missing_attributes
+      { id: conversation.display_id, missing_attributes: attributes } if attributes.any?
+    end
+    return if missing.empty?
+
+    render json: {
+      error: I18n.t('errors.conversation.required_attributes_missing'),
+      conversations: missing
+    }, status: :unprocessable_content
   end
 
   def enqueue_conversation_job

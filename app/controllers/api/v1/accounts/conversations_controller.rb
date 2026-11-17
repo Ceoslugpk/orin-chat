@@ -81,6 +81,9 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def toggle_status
+    missing_attributes = required_attributes_missing
+    return render_required_attributes_error(missing_attributes) if missing_attributes.any?
+
     # FIXME: move this logic into a service object
     if bot_handoff?
       @conversation.bot_handoff!
@@ -176,6 +179,26 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def set_conversation_status
     @conversation.status = params[:status]
     @conversation.snoozed_until = parse_date_time(params[:snoozed_until].to_s) if params[:snoozed_until]
+  end
+
+  def required_attributes_missing
+    return [] unless resolving_conversation?
+
+    Conversations::RequiredAttributesService.new(@conversation).missing_attributes
+  end
+
+  def resolving_conversation?
+    return false if @conversation.resolved?
+
+    target_status = params[:status].presence || 'resolved'
+    target_status.to_s == 'resolved'
+  end
+
+  def render_required_attributes_error(missing_attributes)
+    render json: {
+      error: I18n.t('errors.conversation.required_attributes_missing'),
+      missing_attributes: missing_attributes
+    }, status: :unprocessable_content
   end
 
   def handle_human_open
