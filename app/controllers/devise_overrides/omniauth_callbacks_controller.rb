@@ -4,12 +4,39 @@ class DeviseOverrides::OmniauthCallbacksController < DeviseTokenAuth::OmniauthCa
   SHOPIFY_INSTALL_REDIRECT_PATTERN = %r{\Asettings/integrations/shopify\?shopify_pending_install=([0-9a-f]{32})\z}
 
   def omniauth_success
+    return handle_saml_success if params[:provider] == 'saml'
+
     get_resource_from_auth_hash
 
     @resource.present? ? sign_in_user(redirect_url: oauth_redirect_url, sso_account_id: oauth_context['sso_account_id']) : sign_up_user
   end
 
   private
+
+  def handle_saml_success
+    account = saml_account
+    return redirect_to login_page_url(error: 'saml-not-enabled') if account.blank?
+
+    @resource = Saml::UserProvisioner.new(account: account, auth: auth_hash).perform
+    target = session.delete(:saml_target)
+    redirect_url = session.delete(:saml_redirect_url)
+    session.delete(:saml_account_id)
+
+    target == 'mobile' ? sign_in_user_on_mobile : sign_in_user(redirect_url: redirect_url, sso_account_id: account.id)
+  rescue StandardError => e
+    Rails.logger.error("SAML authentication failed: #{e.message}")
+    redirect_to login_page_url(error: 'saml-authentication-failed')
+  end
+
+  def saml_account
+    account = Account.find_by(id: session[:saml_account_id] || params[:account_id])
+    return if account.blank? || !account.feature_enabled?('saml')
+
+    settings = AccountSamlSettings.find_by(account_id: account.id)
+    return if settings.blank? || !settings.configured?
+
+    account
+  end
 
   def sign_in_user(redirect_url: nil, sso_account_id: nil)
     # Capture before skip_confirmation! sets confirmed_at, which would

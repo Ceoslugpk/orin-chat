@@ -1,0 +1,9 @@
+json.id saml_settings.id
+json.sso_url saml_settings.sso_url
+json.certificate saml_settings.certificate
+json.sp_entity_id saml_settings.sp_entity_id
+json.idp_entity_id saml_settings.idp_entity_id
+json.metadata_url saml_settings.metadata_url
+json.metadata_refreshed_at saml_settings.metadata_refreshed_at&.to_i
+json.role_mappings saml_settings.role_mappings
+json.fingerprint saml_settings.fingerprint

@@ -57,7 +57,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 | 1.4 | Agent capacity & balanced assignment | ✅ | Round-robin/balanced policies, per-inbox capacity limits, exclusion rules, capacity-aware assignment V1/V2 and admin APIs. Enabled by default for new installations; existing accounts opt in from Super Admin. See [Assignment](assignment.md). |
 | 1.5 | Required attributes on resolve | ✅ | Account-configurable conversation attributes enforced on manual and bulk resolution and in resolving macros; checkbox/blank semantics and feature gating covered. Enabled by default for new installations; existing accounts opt in from Super Admin. See [Required Attributes](required-attributes.md). |
 | 1.6 | Merge & link conversations | ✅ | Symmetric account-scoped conversation links and permanent same-contact merges that move messages/reporting events, merge participants/metadata/labels and leave an activity trail. Available from the conversation More actions menu. See [Merge & Link](conversation-merge.md). |
-| 1.7 | SAML SSO | ⬜ | Per-account SAML 2.0, role mapping, JIT provisioning; SCIM later |
+| 1.7 | SAML SSO | ✅ | Account settings and admin APIs for metadata URL or manual IdP configuration, certificate fingerprint, SP metadata, OmniAuth login flow, JIT provisioning and group-based role mapping. Enabled by default for new installations; existing accounts opt in from Super Admin. See [SAML](saml.md). |
 | 1.8 | Advanced search | ⬜ | Full-text search over messages/contacts/conversations with filters, PostgreSQL-native (no extra search server required) |
 
 ## Phase 2: AI (provider-agnostic) ⬜

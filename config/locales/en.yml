@@ -97,8 +97,10 @@ en:
       invalid_configuration: 'Provide a valid Bandwidth account ID, application ID, client ID, and client secret.'
       authentication_failed: 'Unable to authenticate with Bandwidth. Check your client ID and client secret, then try again.'
     account_saml_settings:
+      configuration_missing: Provide a metadata URL or the IdP SSO URL, entity ID and certificate
       invalid_certificate: must be a valid X.509 certificate in PEM format
       metadata_url:
+        missing: is required to refresh metadata
         invalid_url: must be a valid HTTPS URL
         blocked_address: points to an address that cannot be reached. Use a public host name for your identity provider
         http_error: returned an error. Check that it is the metadata URL from your identity provider

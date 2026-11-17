@@ -12,21 +12,12 @@ import { INSTALLATION_TYPES } from 'dashboard/constants/installationTypes';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 const { shouldShow, shouldShowPaywall } = usePolicy();
 
-const allowedLoginMethods = computed(
-  () => window.chatwootConfig.allowedLoginMethods || ['email']
-);
-
-const isSamlSsoEnabled = computed(() =>
-  allowedLoginMethods.value.includes('saml')
-);
-
 const shouldShowSaml = computed(() => {
-  const hasPermission = shouldShow(
+  return shouldShow(
     FEATURE_FLAGS.SAML,
     ['administrator'],
     [INSTALLATION_TYPES.CLOUD, INSTALLATION_TYPES.ENTERPRISE]
   );
-  return hasPermission && isSamlSsoEnabled.value;
 });
 
 const showPaywall = computed(() => shouldShowPaywall('saml'));
