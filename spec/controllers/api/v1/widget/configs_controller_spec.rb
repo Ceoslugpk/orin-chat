@@ -65,6 +65,16 @@ RSpec.describe '/api/v1/widget/config', type: :request do
         )
       end
 
+      it 'hides branding by default and respects the per-account preference' do
+        post '/api/v1/widget/config', params: params, headers: { 'X-Auth-Token' => token }, as: :json
+        expect(response.parsed_body.dig('website_channel_config', 'disable_branding')).to be(true)
+
+        account.update!(settings: account.settings.merge('disable_branding' => false))
+
+        post '/api/v1/widget/config', params: params, headers: { 'X-Auth-Token' => token }, as: :json
+        expect(response.parsed_body.dig('website_channel_config', 'disable_branding')).to be(false)
+      end
+
       it 'returns 401 if account is suspended' do
         account.update!(status: :suspended)
 

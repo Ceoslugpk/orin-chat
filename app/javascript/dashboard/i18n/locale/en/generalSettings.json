@@ -40,6 +40,13 @@
         "TITLE": "General settings",
         "NOTE": ""
       },
+      "BRANDING": {
+        "TITLE": "Branding",
+        "NOTE": "Control whether the product name and logo appear in the widget, help center, and customer-facing pages.",
+        "LABEL": "Hide “Powered by” branding",
+        "SUCCESS": "Branding preference updated",
+        "ERROR": "Could not update the branding preference"
+      },
       "ACCOUNT_ID": {
         "TITLE": "Account ID",
         "NOTE": "This ID is required if you are building an API based integration"

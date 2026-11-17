@@ -20,6 +20,13 @@ RSpec.describe 'Super Admin Application Config API', type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include(config.value)
       end
+
+      it 'shows installation branding settings' do
+        sign_in(super_admin, scope: :super_admin)
+        get '/super_admin/app_config?config=branding'
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include('BRAND_NAME', 'INSTALLATION_NAME', 'LOGO_THUMBNAIL')
+      end
     end
   end
 

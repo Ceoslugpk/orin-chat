@@ -32,8 +32,9 @@
   enabled: false
 - name: disable_branding
   display_name: Disable Branding
-  enabled: false
-  premium: true
+  enabled: true
+  premium: false
+  deprecated: true
 - name: email_continuity_on_api_channel
   display_name: Email Continuity on API Channel
   enabled: false
@@ -126,7 +127,7 @@
   chatwoot_internal: true
 - name: linear_integration
   display_name: Linear Integration
-  enabled: false
+  enabled: true
 - name: captain_integration
   display_name: Captain
   enabled: false
@@ -150,8 +151,7 @@
   chatwoot_internal: true
 - name: shopify_integration
   display_name: Shopify Integration
-  enabled: false
-  chatwoot_internal: true
+  enabled: true
 - name: search_with_gin
   display_name: Search messages with GIN
   enabled: false
@@ -161,14 +161,14 @@
   enabled: true
 - name: crm_integration
   display_name: CRM Integration
-  enabled: false
+  enabled: true
 - name: channel_voice
   display_name: Voice Channel
   enabled: false
   premium: true
 - name: notion_integration
   display_name: Notion Integration
-  enabled: false
+  enabled: true
 - name: captain_integration_v2
   display_name: Captain V2
   enabled: false
@@ -288,7 +288,7 @@
   column: feature_flags_ext_1
 - name: stripe_integration
   display_name: Stripe Integration
-  enabled: false
+  enabled: true
   column: feature_flags_ext_1
 - name: mobile_voice_push
   display_name: Calls on mobile
@@ -307,7 +307,7 @@
   column: feature_flags_ext_1
 - name: shopify_custom_apps
   display_name: Shopify Custom Apps
-  enabled: false
+  enabled: true
   column: feature_flags_ext_1
 - name: captain_mcp_servers
   display_name: Captain MCP servers

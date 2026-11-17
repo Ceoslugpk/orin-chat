@@ -36,6 +36,7 @@ export default {
       isUpdating: false,
       logo: '',
       inboxName: '',
+      disableBranding: true,
       displayType: CSAT_DISPLAY_TYPES.EMOJI,
       messageContent: '',
     };
@@ -105,6 +106,7 @@ export default {
         const result = await getSurveyDetails({ uuid: this.surveyId });
         this.logo = result.data.inbox_avatar_url;
         this.inboxName = result.data.inbox_name;
+        this.disableBranding = result.data.disable_branding ?? true;
         this.surveyDetails = result?.data?.csat_survey_response;
         this.selectedRating = this.surveyDetails?.rating;
         this.feedbackMessage = this.surveyDetails?.feedback_message || '';
@@ -214,7 +216,7 @@ export default {
         />
       </div>
       <div class="mb-3">
-        <Branding />
+        <Branding :disable-branding="disableBranding" />
       </div>
     </div>
   </div>

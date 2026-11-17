@@ -31,23 +31,25 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ Rebrand (logos, defaults, all locales via installation name)
 - ✅ Containerised dev toolbox (`bin/toolbox`)
 
-## Phase 0.5: Free and unbranded 🚧
+## Phase 0.5: Free and unbranded ✅
 
-- 🚧 Remove remaining paywalls: Super Admin planned/included presentation
-  and dashboard feature policy are integrated; remaining account-feature,
-  cloud/enterprise, billing and limit paths still need inventory and validation
-- 🚧 Remove remaining user-facing Chatwoot branding and links (help docs,
-  community links, status page, "Powered by"); preserve legal attribution
-  and upstream-compatible internal identifiers
-- ⬜ "Powered by" branding off by default and controllable per account
-- ⬜ Custom branding page in Super Admin (name, logos, URLs) for white-labelling
-- ⬜ Make supported integrations and complete features available without
-  subscription gates (Linear, Notion, CRM, Stripe, Shopify custom apps,
-  custom reply email/domain, branded email templates, delayed automations,
-  WhatsApp embedded signup, …). External services stay opt-in and require
-  valid configuration; unfinished backends remain disabled.
+- ✅ Paywalls and upgrade paths removed from user-facing flows; billing is hidden
+  outside cloud deployments. API/webhooks are always available, supported
+  integrations (Stripe, Linear, Notion, CRM, Shopify, custom apps) no longer
+  default to off, and remaining cloud-only/unfinished backends stay disabled
+  without upgrade prompts.
+- ✅ User-facing translations are post-processed with the installation name, and
+  signup terms/privacy links use installation configuration instead of upstream
+  URLs. Legal attribution in transactional email remains.
+- ✅ “Powered by” branding is off by default; account admins control widget,
+  help-center and survey branding under Account → Branding.
+- ✅ Super Admin → Settings → Custom Branding edits installation name, brand
+  name/URLs, and logos (`INSTALLATION_NAME`, `BRAND_NAME`, `BRAND_URL`,
+  `WIDGET_BRAND_URL`, `LOGO`, `LOGO_DARK`, `LOGO_THUMBNAIL`).
+- ✅ Integrations and completed features are available without subscription
+  gates, subject to their external configuration. See [Branding](branding.md).
 
-## Phase 1: Enterprise parity (rebuild removed features) 🚧
+## Phase 1: Enterprise parity (rebuild removed features) ✅
 
 | # | Feature | Status | Notes |
 |---|---|---|---|

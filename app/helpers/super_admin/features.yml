@@ -12,11 +12,10 @@ saml:
   config_key: 'saml'
 custom_branding:
   name: 'Custom Branding'
-  description: 'Apply your own branding to this installation.'
-  enabled: false
+  description: 'Apply your own name, logos and URLs to this installation.'
+  enabled: true
   icon: 'i-lucide-palette'
-  config_key: 'custom_branding'
-  enterprise: true
+  config_key: 'branding'
 agent_capacity:
   name: 'Agent Capacity'
   description: 'Set limits to auto-assigning conversations to your agents.'
