@@ -60,4 +60,30 @@ RSpec.describe Sla::ApplyPolicyService do
       expect(applied_sla.sla_frt_due_at).to eq(Time.zone.parse('2026-11-17 10:00:00'))
     end
   end
+
+  it 'skips closed weekend days when calculating business-hours deadlines' do
+    account.enable_features!('sla')
+    inbox.update!(working_hours_enabled: true)
+    policy.update!(only_during_business_hours: true)
+
+    travel_to Time.zone.parse('2026-11-20 16:30:00') do
+      conversation.update!(sla_policy: policy)
+
+      applied_sla = conversation.applied_slas.find_by!(sla_policy: policy)
+      expect(applied_sla.sla_frt_due_at).to eq(Time.zone.parse('2026-11-23 09:30:00'))
+    end
+  end
+
+  it 'calculates business-hours deadlines in the inbox timezone' do
+    account.enable_features!('sla')
+    inbox.update!(working_hours_enabled: true, timezone: 'Asia/Kolkata')
+    policy.update!(only_during_business_hours: true)
+
+    travel_to Time.zone.parse('2026-11-16 04:00:00') do
+      conversation.update!(sla_policy: policy)
+
+      applied_sla = conversation.applied_slas.find_by!(sla_policy: policy)
+      expect(applied_sla.sla_frt_due_at).to eq(Time.zone.parse('2026-11-16 05:00:00'))
+    end
+  end
 end

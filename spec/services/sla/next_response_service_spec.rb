@@ -46,4 +46,17 @@ RSpec.describe Sla::NextResponseService do
 
     expect(conversation.applied_sla.reload.sla_nrt_due_at).to be_nil
   end
+
+  it 'uses business hours for the next response deadline' do
+    inbox.update!(working_hours_enabled: true)
+    policy.update!(only_during_business_hours: true, next_response_time_threshold: 3600)
+
+    travel_to Time.zone.parse('2026-11-20 16:30:00') do
+      conversation.update!(sla_policy: policy)
+      conversation.update!(first_reply_created_at: 1.hour.ago)
+      conversation.update!(waiting_since: Time.zone.parse('2026-11-20 16:30:00'))
+
+      expect(conversation.applied_sla.sla_nrt_due_at).to eq(Time.zone.parse('2026-11-23 09:30:00'))
+    end
+  end
 end

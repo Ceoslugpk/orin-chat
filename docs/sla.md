@@ -61,11 +61,15 @@ re-implemented.
   events while the account flag is enabled, so message-driven updates keep
   the SLA card current. The SLA settings and reports routes, sidebar entries
   and report route guard all follow the account `sla` flag.
+- Lifecycle coverage exercises automation assignment, conversation payloads,
+  breach jobs and notifications, completion, reopen and reports in one flow.
+  Business-hours deadlines are covered across closed weekends and non-UTC
+  inbox timezones.
 
 ## Not implemented yet
 
-- Holiday and audit-grade timezone coverage for business-hour calculations
-  still needs verification.
+- Holiday-specific business hours. The `working_hours` gem supports them,
+  but inboxes do not store holiday calendars yet.
 - Full browser lifecycle coverage and activation of the feature flag.
 - Dashboard validation of policy names and thresholds beyond the existing
   client-side rules.
