@@ -99,7 +99,12 @@ class Integrations::LlmBaseService
     credential = llm_credential(provider: provider)
 
     with_llm_context(provider: provider, credential: credential) do |context|
-      chat = context.chat(model: model)
+      chat_options = {}
+      unless Llm::Models.registered_model?(model)
+        chat_options[:provider] = provider.to_sym
+        chat_options[:assume_model_exists] = true
+      end
+      chat = context.chat(model: model, **chat_options)
       setup_chat_with_messages(chat, messages)
     end
   rescue StandardError => e

@@ -36,6 +36,12 @@ module Llm::Models
       models[model_name.to_s]
     end
 
+    def registered_model?(model_name)
+      RubyLLM.models.find(model_name.to_s).present?
+    rescue StandardError
+      false
+    end
+
     def provider_for(model_name)
       name = model_name.to_s
       model_config(name)&.dig('provider') || infer_provider_for(name)

@@ -83,7 +83,7 @@ class Captain::BaseTaskService
     credential ||= llm_credential(provider: provider)
 
     with_llm_context(provider: provider, credential: credential) do |context|
-      chat = build_chat(context, model: model, messages: messages, schema: schema, tools: tools, feature: feature)
+      chat = build_chat(context, model: model, provider: provider, messages: messages, schema: schema, tools: tools, feature: feature)
 
       conversation_messages = messages.reject { |m| m[:role] == 'system' }
       return { error: 'No conversation messages provided', error_code: 400, request_messages: messages } if conversation_messages.empty?
@@ -104,10 +104,11 @@ class Captain::BaseTaskService
     end
   end
 
-  def build_chat(context, model:, messages:, **request)
+  def build_chat(context, model:, provider:, messages:, **request)
     tools = request.fetch(:tools, [])
     options = Captain::ResponsesConfig.options(model: model, temperature: nil, feature: request[:feature])
-    chat = context.chat(model: model, **options.slice(:protocol))
+    chat_options = chat_options_for(model, provider, options)
+    chat = context.chat(model: model, **chat_options)
     chat.with_thinking(**options[:thinking]) if options[:thinking]
     system_msg = messages.find { |m| m[:role] == 'system' }
     chat.with_instructions(system_msg[:content]) if system_msg
@@ -119,6 +120,13 @@ class Captain::BaseTaskService
     end
 
     chat
+  end
+
+  def chat_options_for(model, provider, options)
+    chat_options = options.slice(:protocol)
+    return chat_options if Llm::Models.registered_model?(model)
+
+    chat_options.merge(provider: provider.to_sym, assume_model_exists: true)
   end
 
   def add_messages_if_needed(chat, conversation_messages)
