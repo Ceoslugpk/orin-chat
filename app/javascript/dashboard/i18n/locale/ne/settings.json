@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "को-पाइलट",
         "DESCRIPTION": "संवादको क्रममा वास्तविक समय सन्दर्भ सुझाव, ज्ञान आधार सिफारिस, र सक्रिय जानकारी प्रदान गर्छ।"
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "कस्टम मोडेल",
+      "CUSTOM_MODEL_PLACEHOLDER": "कस्टम मोडेल आईडी प्रविष्ट गर्नुहोस्",
+      "CUSTOM_MODEL_APPLY": "लागू गर्नुहोस्",
+      "CUSTOM_MODEL_CANCEL": "रद्द गर्नुहोस्"
     },
     "FEATURES": {
       "TITLE": "फिचरहरू",

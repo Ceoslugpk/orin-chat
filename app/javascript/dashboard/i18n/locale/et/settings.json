@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Kaaspiloot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Kohandatud mudel",
+      "CUSTOM_MODEL_PLACEHOLDER": "Sisesta kohandatud mudeli ID",
+      "CUSTOM_MODEL_APPLY": "Rakenda",
+      "CUSTOM_MODEL_CANCEL": "Tühista"
     },
     "FEATURES": {
       "TITLE": "Funktsioonid",

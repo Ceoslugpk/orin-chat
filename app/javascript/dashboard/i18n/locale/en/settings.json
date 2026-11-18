@@ -639,7 +639,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Custom model",
+      "CUSTOM_MODEL_PLACEHOLDER": "Enter custom model ID",
+      "CUSTOM_MODEL_APPLY": "Apply",
+      "CUSTOM_MODEL_CANCEL": "Cancel"
     },
     "FEATURES": {
       "TITLE": "Features",

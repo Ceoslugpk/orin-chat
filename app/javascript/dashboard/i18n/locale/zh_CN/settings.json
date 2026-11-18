@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Copilot",
         "DESCRIPTION": "在对话中提供实时上下文建议、知识库推荐和主动洞察。"
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "自定义模型",
+      "CUSTOM_MODEL_PLACEHOLDER": "输入自定义模型 ID",
+      "CUSTOM_MODEL_APPLY": "应用",
+      "CUSTOM_MODEL_CANCEL": "取消"
     },
     "FEATURES": {
       "TITLE": "特性",

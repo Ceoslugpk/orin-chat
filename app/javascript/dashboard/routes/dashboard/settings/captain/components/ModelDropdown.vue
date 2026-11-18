@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useCaptainConfigStore } from 'dashboard/store/captain/preferences';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 import DropdownBody from 'dashboard/components-next/dropdown-menu/base/DropdownBody.vue';
 import DropdownItem from 'dashboard/components-next/dropdown-menu/base/DropdownItem.vue';
 import { provideDropdownContext } from 'dashboard/components-next/dropdown-menu/base/provider.js';
@@ -17,6 +19,13 @@ const props = defineProps({
 
 const emit = defineEmits(['change']);
 const { isOnChatwootCloud } = useAccount();
+
+const inferProvider = modelId => {
+  const name = (modelId || '').toLowerCase();
+  if (name.startsWith('claude')) return 'anthropic';
+  if (name.startsWith('gemini')) return 'gemini';
+  return 'openai';
+};
 
 const PROVIDER_ICONS = {
   openai: 'i-ri-openai-fill',
@@ -64,6 +73,16 @@ const selectedModelDetails = computed(() => {
   );
 });
 
+const showCustomModelInput = ref(false);
+const customModelDraft = ref('');
+
+const toggleCustomInput = () => {
+  showCustomModelInput.value = !showCustomModelInput.value;
+  if (showCustomModelInput.value) {
+    customModelDraft.value = '';
+  }
+};
+
 const getCreditLabel = model => {
   const multiplier = model.credit_multiplier || 1;
   return t('CAPTAIN_SETTINGS.MODEL_CONFIG.CREDITS_PER_MESSAGE', {
@@ -90,6 +109,18 @@ const selectModel = model => {
   emit('change', { feature: props.featureKey, model: model.id });
   closeDropdown();
 };
+
+const applyCustomModel = () => {
+  const customModel = customModelDraft.value?.trim();
+  if (!customModel) return;
+  selectModel({
+    id: customModel,
+    display_name: customModel,
+    provider: inferProvider(customModel),
+  });
+  showCustomModelInput.value = false;
+  customModelDraft.value = '';
+};
 </script>
 
 <template>
@@ -113,8 +144,56 @@ const selectModel = model => {
     </button>
     <DropdownBody
       v-if="isOpen"
-      class="absolute right-0 top-full mt-1 min-w-64 z-50 max-h-96 [&>ul]:max-h-96 [&>ul]:overflow-y-scroll"
+      class="absolute right-0 top-full mt-1 min-w-72 z-50 max-h-96 [&>ul]:max-h-96 [&>ul]:overflow-y-scroll"
     >
+      <li
+        class="n-dropdown-item border-b border-n-weak pb-2 mb-2"
+        @mousedown.prevent
+      >
+        <button
+          type="button"
+          class="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-sm text-n-slate-11 hover:text-n-slate-12"
+          @click="toggleCustomInput"
+        >
+          <span>{{
+            t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_TOGGLE')
+          }}</span>
+          <Icon
+            :icon="
+              showCustomModelInput
+                ? 'i-lucide-chevron-up'
+                : 'i-lucide-chevron-down'
+            "
+            class="size-4"
+          />
+        </button>
+        <div v-if="showCustomModelInput" class="px-2 pt-1">
+          <Input
+            v-model="customModelDraft"
+            size="sm"
+            :placeholder="
+              t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_PLACEHOLDER')
+            "
+            @keyup.enter.stop="applyCustomModel"
+          />
+          <div class="flex justify-end gap-2 mt-2">
+            <Button
+              slate
+              link
+              size="xs"
+              :label="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_CANCEL')"
+              @click.stop="showCustomModelInput = false"
+            />
+            <Button
+              blue
+              size="xs"
+              :label="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_APPLY')"
+              :disabled="!customModelDraft.trim()"
+              @click.stop="applyCustomModel"
+            />
+          </div>
+        </div>
+      </li>
       <DropdownItem
         v-for="model in availableModels"
         :key="model.id"

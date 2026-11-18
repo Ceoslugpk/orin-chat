@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Pielāgots modelis",
+      "CUSTOM_MODEL_PLACEHOLDER": "Ievadiet pielāgotā modeļa ID",
+      "CUSTOM_MODEL_APPLY": "Lietot",
+      "CUSTOM_MODEL_CANCEL": "Atcelt"
     },
     "FEATURES": {
       "TITLE": "Īpašības",

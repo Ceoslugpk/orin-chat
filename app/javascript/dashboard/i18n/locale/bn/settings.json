@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "কো-পাইলট",
         "DESCRIPTION": "কথোপকথনের সময় রিয়েল-টাইম প্রাসঙ্গিক পরামর্শ, নলেজ বেস সুপারিশ এবং সক্রিয় অন্তর্দৃষ্টি প্রদান করে।."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "কাস্টম মডেল",
+      "CUSTOM_MODEL_PLACEHOLDER": "কাস্টম মডেল আইডি লিখুন",
+      "CUSTOM_MODEL_APPLY": "প্রয়োগ করুন",
+      "CUSTOM_MODEL_CANCEL": "বাতিল করুন"
     },
     "FEATURES": {
       "TITLE": "বৈশিষ্ট্যসমূহ",
