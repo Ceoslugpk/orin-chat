@@ -20,10 +20,18 @@ defineProps({
   },
 });
 
-const emit = defineEmits(['change']);
+const emit = defineEmits(['change', 'applyCustomModel', 'removeCustomModel']);
 
 const handleModelChange = ({ feature, model }) => {
   emit('change', { feature, model });
+};
+
+const handleApplyCustomModel = payload => {
+  emit('applyCustomModel', payload);
+};
+
+const handleRemoveCustomModel = payload => {
+  emit('removeCustomModel', payload);
 };
 </script>
 
@@ -42,6 +50,8 @@ const handleModelChange = ({ feature, model }) => {
       v-if="isAllowed"
       :feature-key="featureKey"
       @change="handleModelChange"
+      @apply-custom-model="handleApplyCustomModel"
+      @remove-custom-model="handleRemoveCustomModel"
     />
   </div>
 </template>

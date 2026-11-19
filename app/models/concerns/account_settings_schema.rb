@@ -3,6 +3,16 @@ module AccountSettingsSchema
 
   CAPTAIN_MODEL_PROPERTIES = Llm::Models.model_feature_keys.index_with { { 'type': %w[string null] } }.freeze
   CAPTAIN_FEATURE_PROPERTIES = Llm::Models.feature_keys.index_with { { 'type': %w[boolean null] } }.freeze
+  CAPTAIN_CUSTOM_MODEL_SCHEMA = {
+    'type': 'object',
+    'properties': {
+      'id': { 'type': 'string' },
+      'display_name': { 'type': %w[string null] },
+      'provider': { 'type': 'string' }
+    },
+    'required': %w[id provider],
+    'additionalProperties': false
+  }.freeze
 
   SETTINGS_PARAMS_SCHEMA = {
     'type': 'object',
@@ -27,6 +37,10 @@ module AccountSettingsSchema
           'type': %w[object null],
           'properties': CAPTAIN_MODEL_PROPERTIES,
           'additionalProperties': false
+        },
+        'captain_custom_models': {
+          'type': %w[array null],
+          'items': CAPTAIN_CUSTOM_MODEL_SCHEMA
         },
         'captain_features': {
           'type': %w[object null],

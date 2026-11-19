@@ -83,6 +83,26 @@ module Llm::Models
       end
     end
 
+    def configured_for_provider?(provider)
+      credentials = Llm::Config.credentials_for(provider)
+      return credentials[:api_key].present? || credentials[:api_base].present? if provider.to_s == 'openai'
+
+      credentials[:api_key].present?
+    end
+
+    def custom_model_entry(model_name, display_name: nil, provider: nil)
+      name = model_name.to_s
+      resolved_provider = (provider.presence || provider_for(name)).to_s
+      model = model_config(name) || {}
+      {
+        id: name,
+        display_name: display_name.presence || model['display_name'] || name,
+        provider: resolved_provider,
+        coming_soon: false,
+        credit_multiplier: model['credit_multiplier']
+      }
+    end
+
     private
 
     def custom_model_allowed_for?(feature, model_name)
@@ -101,13 +121,6 @@ module Llm::Models
       return 'gemini' if name.start_with?('gemini')
 
       'openai'
-    end
-
-    def configured_for_provider?(provider)
-      credentials = Llm::Config.credentials_for(provider)
-      return credentials[:api_key].present? || credentials[:api_base].present? if provider == 'openai'
-
-      credentials[:api_key].present?
     end
   end
 end

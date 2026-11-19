@@ -292,6 +292,119 @@ RSpec.describe 'Api::V1::Accounts::Captain::Preferences', type: :request do
         expect(account.captain_models['editor']).to eq('gpt-5.1')
         expect(account.captain_features['editor']).to be true
       end
+
+      describe 'custom model library' do
+        before do
+          InstallationConfig.find_or_initialize_by(name: 'CAPTAIN_OPEN_AI_API_KEY').update!(value: 'openai-key')
+        end
+
+        it 'returns configured provider availability' do
+          get "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(json_response[:provider_configured]).to eq(
+            openai: true,
+            anthropic: false,
+            gemini: false
+          )
+        end
+
+        it 'saves a custom model and returns it in the model library' do
+          put "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              params: {
+                captain_custom_models: [{ id: 'local-llama', provider: 'openai' }]
+              },
+              as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(account.reload.captain_custom_models).to eq(
+            [{ 'id' => 'local-llama', 'provider' => 'openai' }]
+          )
+          expect(json_response[:custom_models]).to include(
+            a_hash_including(id: 'local-llama', provider: 'openai', coming_soon: false)
+          )
+        end
+
+        it 'offers the saved custom model for every feature' do
+          account.update!(captain_custom_models: [{ 'id' => 'local-llama', 'provider' => 'openai' }])
+
+          get "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              as: :json
+
+          model_ids = json_response[:features][:editor][:models].pluck(:id)
+          expect(model_ids).to include('local-llama')
+        end
+
+        it 'rejects a custom model whose provider is not configured' do
+          put "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              params: {
+                captain_custom_models: [{ id: 'claude-opus-4', provider: 'anthropic' }]
+              },
+              as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_response[:message]).to include('configure Anthropic credentials or endpoint before adding claude-opus-4')
+          expect(account.reload.captain_custom_models).to be_nil
+        end
+
+        it 'rejects an unknown provider' do
+          put "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              params: {
+                captain_custom_models: [{ id: 'mystery-model', provider: 'acme' }]
+              },
+              as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_response[:message]).to include('must be openai, anthropic, or gemini')
+        end
+
+        it 'removes a custom model when an empty list is submitted' do
+          account.update!(captain_custom_models: [{ 'id' => 'local-llama', 'provider' => 'openai' }])
+
+          put "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              params: { captain_custom_models: [] },
+              as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(account.reload.captain_custom_models).to be_nil
+          expect(json_response[:custom_models]).to eq([])
+        end
+
+        it 'ignores malformed entries instead of failing the request' do
+          put "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              params: {
+                captain_custom_models: [
+                  'not-a-hash',
+                  { id: 'local-llama', provider: 'openai' }
+                ]
+              },
+              as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(account.reload.captain_custom_models).to eq(
+            [{ 'id' => 'local-llama', 'provider' => 'openai' }]
+          )
+        end
+
+        it 'keeps catalogue models in the feature list alongside custom ones' do
+          account.update!(captain_custom_models: [{ 'id' => 'local-llama', 'provider' => 'openai' }])
+
+          get "/api/v1/accounts/#{account.id}/captain/preferences",
+              headers: admin.create_new_auth_token,
+              as: :json
+
+          model_ids = json_response[:features][:editor][:models].pluck(:id)
+          expect(model_ids).to include('gpt-6-luna', 'local-llama')
+        end
+      end
     end
   end
 end

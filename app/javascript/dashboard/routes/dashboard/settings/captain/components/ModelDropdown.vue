@@ -17,7 +17,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['change']);
+const emit = defineEmits(['change', 'applyCustomModel', 'removeCustomModel']);
 const { isOnChatwootCloud } = useAccount();
 
 const inferProvider = modelId => {
@@ -45,6 +45,12 @@ const isOpen = ref(false);
 const availableModels = computed(() =>
   captainConfigStore.getModelsForFeature(props.featureKey)
 );
+
+const savedCustomModelIds = computed(
+  () => new Set(captainConfigStore.getCustomModels.map(model => model.id))
+);
+
+const isSavedCustomModel = model => savedCustomModelIds.value.has(model.id);
 
 const recommendedModelId = computed(() =>
   captainConfigStore.getDefaultModelForFeature(props.featureKey)
@@ -113,13 +119,20 @@ const selectModel = model => {
 const applyCustomModel = () => {
   const customModel = customModelDraft.value?.trim();
   if (!customModel) return;
-  selectModel({
+  const provider = inferProvider(customModel);
+  selectedModelId.value = customModel;
+  emit('applyCustomModel', {
+    feature: props.featureKey,
     id: customModel,
-    display_name: customModel,
-    provider: inferProvider(customModel),
+    provider,
   });
   showCustomModelInput.value = false;
   customModelDraft.value = '';
+  closeDropdown();
+};
+
+const removeCustomModel = model => {
+  emit('removeCustomModel', { id: model.id, provider: model.provider });
 };
 </script>
 
@@ -197,34 +210,54 @@ const applyCustomModel = () => {
       <DropdownItem
         v-for="model in availableModels"
         :key="model.id"
-        :click="() => selectModel(model)"
         class="rounded-lg dark:hover:bg-n-solid-3 hover:bg-n-alpha-1"
         :class="{
           'dark:bg-n-solid-3 bg-n-alpha-1': selectedModelId === model.id,
-          'pointer-events-none opacity-60': model.coming_soon,
+          'opacity-60': model.coming_soon,
         }"
       >
-        <div class="flex gap-2 w-full">
-          <Icon :icon="iconForModel(model)" class="size-4 flex-shrink-0" />
-          <div class="flex flex-col w-full text-left gap-1">
-            <div
-              class="text-sm w-full font-medium leading-none text-n-slate-12 flex items-baseline justify-between"
-            >
-              {{ model.display_name }}
-              <span
-                v-if="model.id === recommendedModelId"
-                class="text-[10px] uppercase text-n-iris-11 border border-1 border-n-iris-10 leading-none rounded-lg px-1 py-0.5"
+        <div class="flex items-center gap-2 w-full">
+          <button
+            type="button"
+            class="flex flex-1 gap-2 items-center text-left"
+            :class="{ 'pointer-events-none': model.coming_soon }"
+            :disabled="model.coming_soon"
+            @click="selectModel(model)"
+          >
+            <Icon :icon="iconForModel(model)" class="size-4 flex-shrink-0" />
+            <div class="flex flex-col w-full text-left gap-1">
+              <div
+                class="text-sm w-full font-medium leading-none text-n-slate-12 flex items-baseline justify-between"
               >
-                {{ t('GENERAL.PREFERRED') }}
+                {{ model.display_name }}
+                <span
+                  v-if="model.id === recommendedModelId"
+                  class="text-[10px] uppercase text-n-iris-11 border border-1 border-n-iris-10 leading-none rounded-lg px-1 py-0.5"
+                >
+                  {{ t('GENERAL.PREFERRED') }}
+                </span>
+              </div>
+              <span v-if="model.coming_soon" class="text-xs text-n-slate-11">
+                {{ t('CAPTAIN_SETTINGS.MODEL_CONFIG.COMING_SOON') }}
+              </span>
+              <span
+                v-else-if="isOnChatwootCloud"
+                class="text-xs text-n-slate-11"
+              >
+                {{ getCreditLabel(model) }}
               </span>
             </div>
-            <span v-if="model.coming_soon" class="text-xs text-n-slate-11">
-              {{ t('CAPTAIN_SETTINGS.MODEL_CONFIG.COMING_SOON') }}
-            </span>
-            <span v-else-if="isOnChatwootCloud" class="text-xs text-n-slate-11">
-              {{ getCreditLabel(model) }}
-            </span>
-          </div>
+          </button>
+          <button
+            v-if="isSavedCustomModel(model)"
+            type="button"
+            class="flex-shrink-0 text-n-slate-10 hover:text-n-ruby-11"
+            :title="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_REMOVE')"
+            :aria-label="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_REMOVE')"
+            @click="removeCustomModel(model)"
+          >
+            <Icon icon="i-lucide-trash-2" class="size-4" />
+          </button>
         </div>
       </DropdownItem>
     </DropdownBody>

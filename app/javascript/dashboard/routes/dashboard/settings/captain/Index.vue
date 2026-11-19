@@ -114,6 +114,48 @@ async function handleModelChange({ feature, model }) {
   }
 }
 
+function updateCustomModels(nextModels) {
+  return captainConfigStore.updatePreferences({
+    captain_custom_models: nextModels,
+  });
+}
+
+async function handleApplyCustomModel({ feature, id, provider }) {
+  const existing = captainConfigStore.getCustomModels;
+  const isKnown = existing.some(model => model.id === id);
+
+  try {
+    if (isKnown) {
+      await captainConfigStore.updatePreferences({
+        captain_models: { [feature]: id },
+      });
+    } else {
+      await captainConfigStore.updatePreferences({
+        captain_custom_models: [...existing, { id, provider }],
+        captain_models: { [feature]: id },
+      });
+    }
+    useAlert(t('CAPTAIN_SETTINGS.API.SUCCESS'));
+  } catch (error) {
+    useAlert(t('CAPTAIN_SETTINGS.API.CUSTOM_MODEL_ERROR'));
+    captainConfigStore.fetch();
+  }
+}
+
+async function handleRemoveCustomModel({ id }) {
+  const nextModels = captainConfigStore.getCustomModels.filter(
+    model => model.id !== id
+  );
+
+  try {
+    await updateCustomModels(nextModels);
+    useAlert(t('CAPTAIN_SETTINGS.API.SUCCESS'));
+  } catch (error) {
+    useAlert(t('CAPTAIN_SETTINGS.API.CUSTOM_MODEL_ERROR'));
+    captainConfigStore.fetch();
+  }
+}
+
 onMounted(() => {
   captainConfigStore.fetch();
 });
@@ -151,6 +193,8 @@ onMounted(() => {
               :title="feature.title"
               :description="feature.description"
               @change="handleModelChange"
+              @apply-custom-model="handleApplyCustomModel"
+              @remove-custom-model="handleRemoveCustomModel"
             />
           </div>
         </SectionLayout>

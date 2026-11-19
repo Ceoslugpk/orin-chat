@@ -62,11 +62,16 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 | 1.7 | SAML SSO | ✅ | Account settings and admin APIs for metadata URL or manual IdP configuration, certificate fingerprint, SP metadata, OmniAuth login flow, JIT provisioning and group-based role mapping. Enabled by default for new installations; existing accounts opt in from Super Admin. See [SAML](saml.md). |
 | 1.8 | Advanced search | ✅ | PostgreSQL-native message/contact/conversation/article search with date, sender and inbox filters, permission scoping and optional OpenSearch fallback. Enabled by default for new installations; existing accounts opt in from Super Admin. See [Advanced Search](advanced-search.md). |
 
-## Phase 2: AI (provider-agnostic) ⬜
+## Phase 2: AI (provider-agnostic) 🚧
 
 Works with any OpenAI-compatible endpoint, Anthropic, or a local model
 (Ollama), configured by the administrator.
 
+- 🚧 Provider-agnostic model configuration: installation-level
+  OpenAI-compatible/Anthropic/Gemini credentials and endpoints, per-feature
+  model overrides, and a per-account custom-model library the dashboard can
+  add, select and remove. Saving a custom model fails closed unless its
+  provider has credentials or an endpoint configured.
 - Knowledge base for AI: help-center articles, URLs (crawl), PDFs, FAQs;
   FAQ suggestions from resolved conversations; coverage gaps
 - AI agent per inbox: guardrails, tone guidelines, scenarios/playbooks,

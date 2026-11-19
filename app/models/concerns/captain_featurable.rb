@@ -5,8 +5,10 @@ module CaptainFeaturable
 
   included do
     before_validation :normalize_captain_models
+    before_validation :normalize_captain_custom_models
     # A model removed from config/llm.yml stays saved until the account is remapped, so only check changed choices.
     validate :validate_captain_models, if: :captain_models_changed?
+    validate :validate_captain_custom_models, if: :captain_custom_models_changed?
 
     # Dynamically define accessor methods for each captain feature
     Llm::Models.feature_keys.each do |feature_key|
@@ -73,5 +75,48 @@ module CaptainFeaturable
     end
 
     self.captain_models = normalized_models.presence
+  end
+
+  def normalize_captain_custom_models
+    return self.captain_custom_models = nil if captain_custom_models.blank?
+
+    models = Array(captain_custom_models).filter_map { |entry| normalized_custom_model(entry) }
+
+    self.captain_custom_models = models.uniq { |model| model['id'] }.presence
+  end
+
+  def normalized_custom_model(entry)
+    return unless entry.is_a?(Hash)
+
+    id = (entry['id'] || entry[:id]).to_s.strip
+    return if id.blank?
+
+    provider = (entry['provider'] || entry[:provider]).to_s.strip.downcase
+    provider = Llm::Models.provider_for(id) if provider.blank?
+    display_name = (entry['display_name'] || entry[:display_name]).to_s.strip
+
+    {
+      'id' => id,
+      'display_name' => display_name.presence,
+      'provider' => provider
+    }.compact
+  end
+
+  def validate_captain_custom_models
+    return if captain_custom_models.blank?
+
+    captain_custom_models.each do |model|
+      id = model['id'].to_s
+      provider = model['provider'].to_s
+      unless Llm::Models.providers.key?(provider)
+        errors.add(:captain_custom_models, "provider for #{id} must be openai, anthropic, or gemini")
+        next
+      end
+
+      next if Llm::Models.configured_for_provider?(provider)
+
+      provider_label = Llm::Models.providers.dig(provider, 'display_name') || provider
+      errors.add(:captain_custom_models, "configure #{provider_label} credentials or endpoint before adding #{id}")
+    end
   end
 end

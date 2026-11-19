@@ -643,7 +643,8 @@
       "CUSTOM_MODEL_TOGGLE": "Custom model",
       "CUSTOM_MODEL_PLACEHOLDER": "Enter custom model ID",
       "CUSTOM_MODEL_APPLY": "Apply",
-      "CUSTOM_MODEL_CANCEL": "Cancel"
+      "CUSTOM_MODEL_CANCEL": "Cancel",
+      "CUSTOM_MODEL_REMOVE": "Remove custom model"
     },
     "FEATURES": {
       "TITLE": "Features",
@@ -661,7 +662,8 @@
     },
     "API": {
       "SUCCESS": "Captain settings updated successfully.",
-      "ERROR": "Failed to update Captain settings. Please try again."
+      "ERROR": "Failed to update Captain settings. Please try again.",
+      "CUSTOM_MODEL_ERROR": "Could not save the custom model. Check that the provider is configured, then try again."
     }
   },
   "BILLING_SETTINGS": {

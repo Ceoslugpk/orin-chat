@@ -6,6 +6,8 @@ export const useCaptainConfigStore = defineStore('captainConfig', {
     providers: {},
     models: {},
     features: {},
+    customModels: [],
+    providerConfigured: {},
     uiFlags: {
       isFetching: false,
     },
@@ -15,6 +17,9 @@ export const useCaptainConfigStore = defineStore('captainConfig', {
     getProviders: state => state.providers,
     getModels: state => state.models,
     getFeatures: state => state.features,
+    getCustomModels: state => state.customModels,
+    isProviderConfigured: state => provider =>
+      state.providerConfigured[provider] !== false,
     getUIFlags: state => state.uiFlags,
     getModelsForFeature: state => featureKey => {
       const feature = state.features[featureKey];
@@ -54,6 +59,8 @@ export const useCaptainConfigStore = defineStore('captainConfig', {
         this.providers = response.data.providers || {};
         this.models = response.data.models || {};
         this.features = response.data.features || {};
+        this.customModels = response.data.custom_models || [];
+        this.providerConfigured = response.data.provider_configured || {};
       } catch (error) {
         // Ignore error
       } finally {
@@ -66,6 +73,8 @@ export const useCaptainConfigStore = defineStore('captainConfig', {
       this.providers = response.data.providers || {};
       this.models = response.data.models || {};
       this.features = response.data.features || {};
+      this.customModels = response.data.custom_models || [];
+      this.providerConfigured = response.data.provider_configured || {};
     },
   },
 });

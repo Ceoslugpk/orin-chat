@@ -125,4 +125,16 @@ Current step: **Custom Roles completed and activated (2026-11-17)**. Positive as
 4. Delivery-time authorization, shared contact/presence stream filtering, credential review and targeted client purge are implemented; queue-delay specs cover revocation and later granting. Optional next: multi-process concurrency measurement.
 5. Custom Roles is complete for this milestone. Continue with Phase 1.3 (SLA) or the Phase 0.5/Audit Logs/self-hosting backlog.
 
+## 7a. Phase 2.1 progress — custom model library (2026-11-19)
+
+The provider-agnostic AI foundation is committed through `b0471c7fe`. The finished slice on top of it persists a per-account custom-model library the dashboard can use:
+
+- `Account#captain_custom_models` (JSONB via `store_accessor`) is normalized and validated in `CaptainFeaturable`: ids are trimmed and de-duplicated, a missing provider is inferred from the model name, and a save fails closed unless the chosen provider has credentials or an endpoint configured (unknown providers are rejected).
+- `PreferencesController` accepts `captain_custom_models`, returns the saved library as `custom_models`, returns per-provider availability as `provider_configured`, and offers configured custom models on every feature. Malformed (non-hash) entries are ignored rather than crashing the request.
+- The dashboard store keeps `customModels`/`providerConfigured`; `ModelDropdown` lists saved custom models, saves new ones and emits removal. `Index.vue` saves a newly typed model and selects it in a single request.
+- English strings added only (`CUSTOM_MODEL_REMOVE`, `API.CUSTOM_MODEL_ERROR`); Crowdin handles other locales.
+- Evidence: **145 Ruby examples, 0 failures** (4 pre-existing MFA skips) across `models`, `feature_router`, `config`, `captain_featurable`, `account` and captain preferences; **6 new frontend tests + i18n specs pass**; RuboCop and ESLint clean on changed files. `super_admin/accounts_controller_spec.rb` still has **9 pre-existing failures** unrelated to this change (identical with and without it).
+
+Next: continue Phase 2 (knowledge-base ingestion, AI agent per inbox, copilot).
+
 After Phase 1.2: SLA, capacity/balanced assignment, required resolve attributes, merge/link conversations, SAML and advanced search remain planned. AI, commerce/WhatsApp, deeper ticketing and later connectors follow. Keep Phase 0.5, remaining Audit Logs work and production self-hosting/backup/restore in the parallel backlog; none is complete just because definition CRUD works.
