@@ -20,7 +20,8 @@ class AppliedSla < ApplicationRecord
   scope :filter_by_labels, lambda { |labels|
     next if labels.blank?
 
-    where(conversation_id: Conversation.tagged_with(labels, any: true).ids)
+    # tagged_with forces a `SELECT *`; reselect keeps the subquery single-column.
+    where(conversation_id: Conversation.tagged_with(labels, any: true).reselect(:id))
   }
 
   validates :sla_policy_id, uniqueness: { scope: [:account_id, :conversation_id] }
