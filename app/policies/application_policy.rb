@@ -9,6 +9,18 @@ class ApplicationPolicy
     @record = record
   end
 
+  def administrator?
+    account_user&.administrator? || false
+  end
+
+  def restricted_custom_role?
+    account_user&.uses_custom_role_permissions? || false
+  end
+
+  def custom_role_permission?(permission)
+    restricted_custom_role? && account_user.permissions.include?(permission)
+  end
+
   def index?
     false
   end

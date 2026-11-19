@@ -44,6 +44,8 @@ user:
   $ref: ./resource/user.yml
 agent:
   $ref: ./resource/agent.yml
+custom_role:
+  $ref: ./resource/custom_role.yml
 inbox:
   $ref: ./resource/inbox.yml
 branded_email_layout:
@@ -123,6 +125,9 @@ canned_response_create_update_payload:
 
 custom_attribute_create_update_payload:
   $ref: ./request/custom_attribute/create_update_payload.yml
+
+custom_role_create_update_payload:
+  $ref: ./request/custom_role/create_update_payload.yml
 
 ## Agent
 agent_create_payload:

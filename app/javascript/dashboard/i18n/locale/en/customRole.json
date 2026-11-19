@@ -2,29 +2,22 @@
   "CUSTOM_ROLE": {
     "HEADER": "Custom Roles",
     "LEARN_MORE": "Learn more about custom roles",
-    "DESCRIPTION": "Custom roles are roles that are created by the account owner or admin. These roles can be assigned to agents to define their access and permissions within the account. Custom roles can be created with specific permissions and access levels to suit the requirements of the organization.",
+    "DESCRIPTION": "Define reusable permission sets for agents in your account.",
+    "DUPLICATE_LABEL": "{name} (#{id})",
     "COUNT": "{n} custom role | {n} custom roles",
     "HEADER_BTN_TXT": "Add custom role",
     "LOADING": "Fetching custom roles...",
     "SEARCH_PLACEHOLDER": "Search custom roles...",
     "NO_RESULTS": "No custom roles found matching your search",
     "SEARCH_404": "There are no items matching this query.",
-    "PAYWALL": {
-      "TITLE": "Upgrade to create custom roles",
-      "AVAILABLE_ON": "The custom role feature is only available in the Business and Enterprise plans.",
-      "UPGRADE_PROMPT": "Upgrade your plan to get access to advanced features like team management, automations, custom attributes, and more.",
-      "UPGRADE_NOW": "Upgrade now",
-      "CANCEL_ANYTIME": "You can change or cancel your plan anytime"
-    },
-    "ENTERPRISE_PAYWALL": {
-      "AVAILABLE_ON": "The custom role feature is only available in the paid plans.",
-      "UPGRADE_PROMPT": "Upgrade to a paid plan to access advanced features like audit logs, agent capacity, and more.",
-      "ASK_ADMIN": "Please reach out to your administrator for the upgrade."
+    "PREVIEW": {
+      "TITLE": "Custom roles are not enabled for this account",
+      "DESCRIPTION": "Custom roles are available on every installation. An installation administrator can enable them for this account in Super Admin; no upgrade is required."
     },
     "LIST": {
       "404": "There are no custom roles available in this account.",
       "TITLE": "Manage custom roles",
-      "DESC": "Custom roles are roles that are created by the account owner or admin. These roles can be assigned to agents to define their access and permissions within the account. Custom roles can be created with specific permissions and access levels to suit the requirements of the organization.",
+      "DESC": "Define reusable permission sets for agents in your account.",
       "TABLE_HEADER": {
         "NAME": "Name",
         "DESCRIPTION": "Description",
@@ -57,7 +50,7 @@
       },
       "CANCEL_BUTTON_TEXT": "Cancel",
       "API": {
-        "ERROR_MESSAGE": "Could not connect to Woot server. Please try again."
+        "ERROR_MESSAGE": "Could not complete the custom role request. Please try again."
       }
     },
     "ADD": {
@@ -81,7 +74,7 @@
       "BUTTON_TEXT": "Delete",
       "API": {
         "SUCCESS_MESSAGE": "Custom role deleted successfully.",
-        "ERROR_MESSAGE": "Could not connect to Woot server. Please try again."
+        "ERROR_MESSAGE": "Could not complete the custom role request. Please try again."
       },
       "CONFIRM": {
         "TITLE": "Confirm deletion",

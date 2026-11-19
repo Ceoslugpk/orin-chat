@@ -298,6 +298,28 @@ RSpec.describe 'Conversation Messages API', type: :request do
         expect(message.reload.content_attributes['bcc_emails']).to be_nil
       end
 
+      it 'records the deletion in the audit log' do
+        delete "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/messages/#{message.id}",
+               headers: agent.create_new_auth_token,
+               as: :json
+
+        log = AuditLog.for_account(account).find_by(auditable: message, action: 'destroy')
+        expect(log.user).to eq(agent)
+        expect(log.audited_changes).to eq('display_id' => conversation.display_id)
+      end
+
+      it 'preserves the message if its deletion audit cannot be recorded' do
+        original_content = message.content
+        expect(AuditLog).to receive(:record!).and_raise(ActiveRecord::RecordInvalid.new(message))
+
+        delete "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/messages/#{message.id}",
+               headers: agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(message.reload.content).to eq(original_content)
+        expect(message.deleted).not_to be(true)
+      end
+
       it 'keeps the forward marker on a deleted forwarded email' do
         message.update!(content_attributes: { forwarded_message_id: 1, to_emails: ['vendor@example.com'] })
 

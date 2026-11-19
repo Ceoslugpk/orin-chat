@@ -19,10 +19,23 @@ module Llm::FeatureRouter
     end
 
     def reasoning_effort(feature:, model:)
-      return unless Llm::Models.provider_for(model) == 'openai' && standard_openai_endpoint?
+      return unless openai_responses_reasoning?(model)
 
-      effort = Llm::Models.features.dig(feature.to_s, 'reasoning_effort') || Llm::Models.model_config(model)&.dig('reasoning_effort')
-      effort.to_sym if RubyLLM.models.find(model).reasoning_option_values(:effort).include?(effort)
+      effort = configured_reasoning_effort(feature, model)
+      return if effort.blank?
+
+      values = RubyLLM.models.find(model).reasoning_option_values(:effort)
+      effort.to_sym if values.include?(effort)
+    rescue StandardError
+      nil
+    end
+
+    def openai_responses_reasoning?(model)
+      Llm::Models.provider_for(model) == 'openai' && standard_openai_endpoint?
+    end
+
+    def configured_reasoning_effort(feature, model)
+      Llm::Models.features.dig(feature.to_s, 'reasoning_effort') || Llm::Models.model_config(model)&.dig('reasoning_effort')
     end
 
     def standard_openai_endpoint?
@@ -52,7 +65,11 @@ module Llm::FeatureRouter
       return unless feature_key == 'conversation_completion'
       return unless ChatwootApp.self_hosted_paid?
 
-      InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence
+      model = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence
+      return unless model
+      return model if Llm::Models.valid_model_for?(feature_key, model) || Llm::Models.provider_for(model) == 'openai'
+
+      nil
     end
 
     def provider_for(model, source)

@@ -72,8 +72,8 @@ export const getters = {
     $state.deploymentEnv === 'cloud' && $state.disableMetaInboxCreation,
   isMetaMessageSendingDisabled: $state =>
     $state.deploymentEnv === 'cloud' && $state.disableMetaMessageSending,
-  isACustomBrandedInstance: $state => $state.installationName !== 'Chatwoot',
-  isAChatwootInstance: $state => $state.installationName === 'Chatwoot',
+  isACustomBrandedInstance: $state => $state.installationName !== 'Orin Chat',
+  isAChatwootInstance: $state => $state.installationName === 'Orin Chat',
 };
 
 export const actions = {};

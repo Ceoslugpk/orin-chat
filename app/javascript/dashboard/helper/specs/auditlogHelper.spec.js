@@ -1,3 +1,5 @@
+import enAuditLogs from '../../i18n/locale/en/auditLogs.json';
+import enCustomRole from '../../i18n/locale/en/customRole.json';
 import {
   extractChangedAccountUserValues,
   generateTranslationPayload,
@@ -6,11 +8,39 @@ import {
   buildAuditLogRouteQuery,
 } from '../auditlogHelper'; // import the functions
 
+const flatten = (source, prefix = '') =>
+  Object.entries(source).reduce((flat, [key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === 'object') {
+      return { ...flat, ...flatten(value, path) };
+    }
+    return { ...flat, [path]: value };
+  }, {});
+
+const messages = {
+  ...flatten(enAuditLogs),
+  ...flatten(enCustomRole),
+};
+
+const interpolate = (template, params = {}) =>
+  Object.entries(params).reduce(
+    (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+
+const t = (key, params) =>
+  key in messages ? interpolate(messages[key], params) : key;
+
 describe('Helper functions', () => {
   const agentList = [
     { id: 1, name: 'Agent 1' },
     { id: 2, name: 'Agent 2' },
     { id: 3, name: 'Agent 3' },
+  ];
+
+  const customRoleList = [
+    { id: 91, name: 'Reporting', permissions: ['report_manage'] },
+    { id: 92, name: 'Reporting', permissions: ['conversation_manage'] },
   ];
 
   describe('extractChangedAccountUserValues', () => {
@@ -43,6 +73,60 @@ describe('Helper functions', () => {
         extractChangedAccountUserValues(changes);
       expect(extractedChanges).toEqual(['role', 'availability']);
       expect(values).toEqual(['agent', 'busy']);
+    });
+
+    it('should describe auto_offline changes', () => {
+      const changes = {
+        auto_offline: [true, false],
+      };
+      const { changes: extractedChanges, values } =
+        extractChangedAccountUserValues(changes, [], t);
+      expect(extractedChanges).toEqual(['auto_offline']);
+      expect(values).toEqual(['auto offline disabled']);
+    });
+
+    it('uses a unique built-in role id when the definition is unknown', () => {
+      const changes = {
+        custom_role_id: [null, 93],
+      };
+      const { changes: extractedChanges, values } =
+        extractChangedAccountUserValues(changes, customRoleList, t);
+      expect(extractedChanges).toEqual(['custom_role_id']);
+      expect(values).toEqual(['#93']);
+    });
+
+    it('labels a duplicate definition by definition ID', () => {
+      const changes = {
+        custom_role_id: [91, 92],
+      };
+      const { values } = extractChangedAccountUserValues(
+        changes,
+        customRoleList,
+        t
+      );
+      expect(values).toEqual(['Reporting (#92)']);
+    });
+
+    it('describes a removed definition reference', () => {
+      const changes = {
+        custom_role_id: [91, null],
+      };
+      const { values } = extractChangedAccountUserValues(
+        changes,
+        customRoleList,
+        t
+      );
+      expect(values).toEqual(['no custom role']);
+    });
+
+    it('describes a newly assigned custom role', () => {
+      const changes = {
+        custom_role_id: [null, 91],
+      };
+      const { changes: extractedChanges, values } =
+        extractChangedAccountUserValues(changes, customRoleList, t);
+      expect(extractedChanges).toEqual(['custom_role_id']);
+      expect(values).toEqual(['Reporting (#91)']);
     });
   });
 
@@ -84,13 +168,38 @@ describe('Helper functions', () => {
         },
       };
 
-      const payload = generateTranslationPayload(auditLogItem, agentList);
+      const payload = generateTranslationPayload(
+        auditLogItem,
+        agentList,
+        customRoleList,
+        t
+      );
       expect(payload).toEqual({
         agentName: 'Agent 1',
         id: 123,
         user: 'Agent 3',
         attributes: ['role', 'availability'],
         values: ['agent', 'busy'],
+      });
+    });
+
+    it('identifies a removed account agent from the saved audit changes', () => {
+      const payload = generateTranslationPayload(
+        {
+          auditable_type: 'AccountUser',
+          action: 'destroy',
+          auditable_id: 123,
+          user_id: 1,
+          audited_changes: { user_id: 2 },
+          auditable: null,
+        },
+        agentList
+      );
+
+      expect(payload).toEqual({
+        agentName: 'Agent 1',
+        id: 123,
+        user: 'Agent 2',
       });
     });
 
@@ -212,6 +321,25 @@ describe('Helper functions', () => {
       expect(logActionKey).toEqual('AUDIT_LOGS.MESSAGE.DELETE');
     });
 
+    it('returns a translated action key when removing an account agent', () => {
+      expect(
+        generateLogActionKey({
+          auditable_type: 'AccountUser',
+          action: 'destroy',
+        })
+      ).toBe('AUDIT_LOGS.ACCOUNT_USER.REMOVE');
+    });
+
+    it.each([
+      ['create', 'ADD'],
+      ['update', 'EDIT'],
+      ['destroy', 'DELETE'],
+    ])('renders a custom-role %s audit event', (action, key) => {
+      expect(
+        generateLogActionKey({ auditable_type: 'CustomRole', action })
+      ).toBe(`AUDIT_LOGS.CUSTOM_ROLE.${key}`);
+    });
+
     it('should generate correct action key when updating a deleted user', () => {
       const auditLogItem = {
         auditable_type: 'AccountUser',
@@ -243,6 +371,13 @@ describe('Helper functions', () => {
         sort: 'asc',
         since: 100,
         until: 200,
+      });
+    });
+
+    it('supports filtering role-definition changes', () => {
+      expect(auditLogFiltersFromQuery({ type: 'CustomRole' })).toEqual({
+        page: 1,
+        types: ['CustomRole'],
       });
     });
 

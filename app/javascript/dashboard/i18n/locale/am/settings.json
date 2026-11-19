@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "ኮ-ፓይሎት",
         "DESCRIPTION": "በውይይቶች ወቅት በሕይወት የሚከናወኑ የሁኔታ ምክሮች፣ የእውቀት ቤት ምክሮችና ቀድሞ የተሰጡ እይታዎችን ያቀርባል።."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "ብጁ ሞዴል",
+      "CUSTOM_MODEL_PLACEHOLDER": "ብጁ ሞዴል መለያ ያስገቡ",
+      "CUSTOM_MODEL_APPLY": "ተግብር",
+      "CUSTOM_MODEL_CANCEL": "ሰርዝ"
     },
     "FEATURES": {
       "TITLE": "ባህሪያት",

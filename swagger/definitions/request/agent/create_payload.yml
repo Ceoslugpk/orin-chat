@@ -26,3 +26,9 @@ properties:
     type: boolean
     description: Whether the agent is automatically marked offline when they are away.
     example: true
+  custom_role_id:
+    type:
+      - integer
+      - 'null'
+    description: Optional account-owned custom role definition. Only agent roles can hold a custom role.
+    example: 1

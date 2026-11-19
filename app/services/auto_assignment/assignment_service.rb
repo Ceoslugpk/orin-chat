@@ -72,7 +72,18 @@ class AutoAssignment::AssignmentService
     agents = filter_agents_by_rate_limit(agents)
     return nil if agents.empty?
 
-    round_robin_selector.select_agent(agents)
+    agents = filter_agents_by_capacity(agents)
+    return nil if agents.empty?
+
+    select_agent(agents)
+  end
+
+  def select_agent(agents)
+    if inbox.assignment_policy&.balanced?
+      AutoAssignment::CapacitySelector.new(inbox: inbox).select_agent(agents)
+    else
+      round_robin_selector.select_agent(agents)
+    end
   end
 
   def filter_agents_by_team(agents, conversation)
@@ -89,6 +100,19 @@ class AutoAssignment::AssignmentService
     agents.select do |agent_member|
       rate_limiter = build_rate_limiter(agent_member.user)
       rate_limiter.within_limit?
+    end
+  end
+
+  def filter_agents_by_capacity(agents)
+    return agents unless inbox.account.feature_enabled?('advanced_assignment')
+
+    account_users = inbox.account.account_users
+                         .where(user_id: agents.map(&:user_id))
+                         .includes(:agent_capacity_policy)
+                         .index_by(&:user_id)
+    agents.select do |agent_member|
+      account_user = account_users[agent_member.user_id]
+      account_user.nil? || account_user.capacity_available_for?(inbox)
     end
   end
 

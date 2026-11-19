@@ -19,6 +19,46 @@ RSpec.describe AutoAssignment::AssignmentService do
   end
 
   describe '#perform_bulk_assignment' do
+    context 'when advanced assignment capacity is enabled' do
+      let(:capacity_policy) { create(:agent_capacity_policy, account: account) }
+      let(:roomy_agent) { create(:user, account: account, role: :agent, availability: :online) }
+      let(:busy_agent) { create(:user, account: account, role: :agent, availability: :online) }
+
+      before do
+        account.enable_features!('advanced_assignment')
+        assignment_policy.update!(assignment_order: :balanced)
+        [roomy_agent, busy_agent].each do |user|
+          create(:inbox_member, inbox: inbox, user: user)
+          user.account_users.find_by!(account: account).update!(agent_capacity_policy: capacity_policy)
+        end
+        create(:inbox_capacity_limit, agent_capacity_policy: capacity_policy, inbox: inbox, conversation_limit: 2)
+        create(:conversation, account: account, inbox: inbox, assignee: busy_agent, status: :open)
+        allow(OnlineStatusTracker).to receive(:get_available_users).and_return(
+          roomy_agent.id.to_s => 'online', busy_agent.id.to_s => 'online'
+        )
+      end
+
+      it 'assigns to the agent with available capacity' do
+        conversation = create(:conversation, account: account, inbox: inbox, status: 'open', assignee: nil)
+
+        assigned_count = service.perform_bulk_assignment(limit: 1)
+
+        expect(assigned_count).to eq(1)
+        expect(conversation.reload.assignee).to eq(roomy_agent)
+      end
+
+      it 'excludes agents at capacity' do
+        create(:conversation, account: account, inbox: inbox, assignee: roomy_agent, status: :open)
+        create(:conversation, account: account, inbox: inbox, assignee: roomy_agent, status: :open)
+        conversation = create(:conversation, account: account, inbox: inbox, status: 'open', assignee: nil)
+
+        assigned_count = service.perform_bulk_assignment(limit: 1)
+
+        expect(assigned_count).to eq(1)
+        expect(conversation.reload.assignee).to eq(busy_agent)
+      end
+    end
+
     context 'when auto assignment is enabled' do
       let(:rate_limiter) { instance_double(AutoAssignment::RateLimiter) }
 

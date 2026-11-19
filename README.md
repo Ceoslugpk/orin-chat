@@ -49,7 +49,7 @@ and pay nothing per agent.
 
 Orin Chat is designed to run on a single server (4 cores / 4 GB RAM handles
 roughly 10,000 conversations a day). Orin-specific install instructions are
-coming; until then, the Chatwoot self-hosting guides apply.
+coming; there is not yet a supported self-hosting guide for Orin Chat.
 
 **Privacy:** Orin Chat does not send telemetry or usage data to anyone.
 

@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Copilot",
         "DESCRIPTION": "대화 중 실시간 맥락 제안, 지식 기반 추천 및 사전 인사이트를 제공합니다."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "사용자 지정 모델",
+      "CUSTOM_MODEL_PLACEHOLDER": "사용자 지정 모델 ID를 입력하세요",
+      "CUSTOM_MODEL_APPLY": "적용",
+      "CUSTOM_MODEL_CANCEL": "취소"
     },
     "FEATURES": {
       "TITLE": "기능",

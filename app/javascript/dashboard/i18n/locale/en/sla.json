@@ -11,17 +11,9 @@
     "SEARCH": {
       "NO_RESULTS": "No SLA found matching your search"
     },
-    "PAYWALL": {
-      "TITLE": "Upgrade to create SLAs",
-      "AVAILABLE_ON": "The SLA feature is only available in the Business and Enterprise plans.",
-      "UPGRADE_PROMPT": "Upgrade your plan to get access to advanced features like team management, automations, custom attributes, and more.",
-      "UPGRADE_NOW": "Upgrade now",
-      "CANCEL_ANYTIME": "You can change or cancel your plan anytime"
-    },
-    "ENTERPRISE_PAYWALL": {
-      "AVAILABLE_ON": "The SLA feature is only available in the paid plans.",
-      "UPGRADE_PROMPT": "Upgrade to a paid plan to access advanced features like audit logs, agent capacity, and more.",
-      "ASK_ADMIN": "Please reach out to your administrator for the upgrade."
+    "UNAVAILABLE": {
+      "TITLE": "SLA tracking is not available yet",
+      "DESCRIPTION": "Policy definitions can be managed, but response and resolution tracking is still in progress. No upgrade is required."
     },
     "LIST": {
       "404": "There are no SLAs available in this account.",
@@ -79,6 +71,7 @@
       "THRESHOLD_TIME": {
         "INVALID_FORMAT_ERROR": "Threshold should be a number and greater than zero"
       },
+      "THRESHOLD_REQUIRED_ERROR": "Add at least one response or resolution threshold",
       "EDIT": "Edit",
       "CREATE": "Create",
       "DELETE": "Delete",

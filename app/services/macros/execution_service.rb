@@ -22,6 +22,26 @@ class Macros::ExecutionService < ActionService
 
   private
 
+  def resolve_conversation(params)
+    return if required_attributes_missing?
+
+    super
+  end
+
+  def change_status(status)
+    return if resolved_status?(status) && required_attributes_missing?
+
+    super
+  end
+
+  def resolved_status?(status)
+    %w[resolved 1].include?(Array(status).first.to_s)
+  end
+
+  def required_attributes_missing?
+    Conversations::RequiredAttributesService.new(@conversation).missing_attributes.any?
+  end
+
   def assign_agent(agent_ids)
     agent_ids = agent_ids.map { |id| id == 'self' ? @user.id : id }
     super(agent_ids)

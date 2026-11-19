@@ -43,6 +43,30 @@ RSpec.describe Conversations::EventDataPresenter do
       # the exceptions are the values that would be added in enterprise edition.
       expect(presenter.push_data.except(:applied_sla, :sla_events)).to include(expected_data)
     end
+
+    it 'omits SLA fields while tracking is disabled' do
+      expect(presenter.push_data).not_to have_key(:applied_sla)
+      expect(presenter.push_data).not_to have_key(:sla_events)
+    end
+
+    context 'when SLA tracking is enabled' do
+      let(:sla_policy) { create(:sla_policy, account: conversation.account) }
+
+      before do
+        conversation.account.enable_features!('sla')
+        conversation.update!(sla_policy: sla_policy)
+      end
+
+      it 'includes the applied SLA and its events' do
+        create(:sla_event, applied_sla: conversation.applied_sla, conversation: conversation,
+                           account: conversation.account, inbox: conversation.inbox, sla_policy: sla_policy)
+
+        data = presenter.push_data
+
+        expect(data[:applied_sla]).to include(sla_name: sla_policy.name, sla_status: 'active')
+        expect(data[:sla_events].pluck(:event_type)).to eq(['frt'])
+      end
+    end
   end
 
   describe '#widget_data' do

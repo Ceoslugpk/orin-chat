@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Copilot",
         "DESCRIPTION": "Fournit des suggestions contextuelles en temps réel, des recommandations de base de connaissances et des aperçus proactifs pendant les conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Modèle personnalisé",
+      "CUSTOM_MODEL_PLACEHOLDER": "Saisissez l’ID du modèle personnalisé",
+      "CUSTOM_MODEL_APPLY": "Appliquer",
+      "CUSTOM_MODEL_CANCEL": "Annuler"
     },
     "FEATURES": {
       "TITLE": "Fonctionnalités",

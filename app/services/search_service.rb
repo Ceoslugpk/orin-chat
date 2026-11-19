@@ -11,7 +11,7 @@ class SearchService
   attr_reader :message_backend, :message_pagination
 
   def perform
-    types = search_type == 'all' ? SEARCH_TYPES.keys : [SEARCH_TYPES.key(search_type)]
+    types = search_type == 'all' ? available_types : [SEARCH_TYPES.key(search_type)]
     types.to_h { |type| [type.to_sym, available_types.include?(type) ? send("filter_#{type}") : []] }
   end
 
@@ -24,7 +24,9 @@ class SearchService
   end
 
   def available_types
-    current_account.feature_enabled?('help_center') ? SEARCH_TYPES.keys : SEARCH_TYPES.keys - ['articles']
+    types = current_account.feature_enabled?('help_center') ? SEARCH_TYPES.keys : SEARCH_TYPES.keys - ['articles']
+    types -= ['contacts'] if account_user&.uses_custom_role_permissions? && account_user.permissions.exclude?('contact_manage')
+    types
   end
 
   def countable_types

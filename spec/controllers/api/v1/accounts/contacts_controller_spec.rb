@@ -22,6 +22,40 @@ RSpec.describe 'Contacts API', type: :request do
       end
     end
 
+    context 'with a restricted custom role' do
+      let(:custom_role_agent) { create(:user, account: account, role: :agent) }
+      let(:custom_role) { create(:custom_role, account: account, permissions: permissions) }
+
+      before do
+        account.enable_features!(:custom_roles)
+        custom_role_agent.account_users.find_by!(account: account).update!(custom_role: custom_role)
+      end
+
+      context 'with contact_manage' do
+        let(:permissions) { ['contact_manage'] }
+
+        it 'returns contacts' do
+          get "/api/v1/accounts/#{account.id}/contacts",
+              headers: custom_role_agent.create_new_auth_token,
+              as: :json
+
+          expect(response).to have_http_status(:success)
+        end
+      end
+
+      context 'without contact_manage' do
+        let(:permissions) { ['report_manage'] }
+
+        it 'denies contact access' do
+          get "/api/v1/accounts/#{account.id}/contacts",
+              headers: custom_role_agent.create_new_auth_token,
+              as: :json
+
+          expect(response).to have_http_status(:unauthorized)
+        end
+      end
+    end
+
     context 'when it is an authenticated user' do
       let(:admin) { create(:user, account: account, role: :administrator) }
       let!(:contact) { create(:contact, :with_email, account: account, additional_attributes: { company_name: 'Company 1', country_code: 'IN' }) }
@@ -52,6 +86,7 @@ RSpec.describe 'Contacts API', type: :request do
 
         expect(contact_emails).to include(contact.email)
         expect(contact_inboxes_source_ids).to include(contact_inbox.source_id)
+        expect(response_body['payload'].first['contact_inboxes'].first).not_to have_key('pubsub_token')
       end
 
       it 'returns all contacts without contact inboxes' do

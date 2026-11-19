@@ -10,12 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_17_190931) do
   # These extensions should be enabled to support this database
+  enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
   enable_extension "pgcrypto"
-  enable_extension "plpgsql"
   enable_extension "vector"
 
   create_table "access_tokens", force: :cascade do |t|
@@ -39,7 +39,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.datetime "updated_at", null: false
     t.string "metadata_url"
     t.datetime "metadata_refreshed_at"
-    t.index ["account_id"], name: "index_account_saml_settings_on_account_id"
+    t.index ["account_id"], name: "index_account_saml_settings_on_account_id", unique: true
   end
 
   create_table "account_users", force: :cascade do |t|
@@ -147,6 +147,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.jsonb "exclusion_rules", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_agent_capacity_policies_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_agent_capacity_policies_on_account_id"
   end
 
@@ -188,6 +189,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.datetime "updated_at", null: false
     t.integer "sla_status", default: 0
     t.datetime "completed_at"
+    t.datetime "sla_frt_due_at"
+    t.datetime "sla_nrt_due_at"
+    t.datetime "sla_rt_due_at"
     t.index ["account_id", "sla_policy_id", "conversation_id"], name: "index_applied_slas_on_account_sla_policy_conversation", unique: true
     t.index ["account_id"], name: "index_applied_slas_on_account_id"
     t.index ["conversation_id"], name: "index_applied_slas_on_conversation_id"
@@ -523,8 +527,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.integer "status", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_captain_faq_suggestions_on_account_id"
     t.index ["account_id", "assistant_id", "status", "language"], name: "idx_cap_faq_suggestions_on_account_assistant_status_language"
+    t.index ["account_id"], name: "index_captain_faq_suggestions_on_account_id"
     t.index ["assistant_id"], name: "index_captain_faq_suggestions_on_assistant_id"
     t.index ["embedding"], name: "vector_idx_captain_faq_suggestions_embedding", opclass: :vector_cosine_ops, using: :ivfflat
   end
@@ -803,8 +807,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.jsonb "phone_number_health", default: {}, null: false
     t.datetime "phone_number_health_checked_at"
     t.string "phone_number_health_error", limit: 500
-    t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
     t.index ["phone_number"], name: "index_channel_whatsapp_on_phone_number", unique: true
+    t.index ["phone_number_health_checked_at"], name: "index_channel_whatsapp_on_phone_number_health_checked_at"
   end
 
   create_table "companies", force: :cascade do |t|
@@ -868,6 +872,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.index ["identifier", "account_id"], name: "uniq_identifier_per_account_contact", unique: true
     t.index ["name", "email", "phone_number", "identifier"], name: "index_contacts_on_name_email_phone_number_identifier", opclass: :gin_trgm_ops, using: :gin
     t.index ["phone_number", "account_id"], name: "index_contacts_on_phone_number_and_account_id"
+  end
+
+  create_table "conversation_links", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "linked_conversation_id", null: false
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_conversation_links_on_account_id"
+    t.index ["conversation_id", "linked_conversation_id"], name: "index_conversation_links_on_pair", unique: true
+    t.index ["conversation_id"], name: "index_conversation_links_on_conversation_id"
+    t.index ["created_by_id"], name: "index_conversation_links_on_created_by_id"
+    t.index ["linked_conversation_id"], name: "index_conversation_links_on_linked_conversation_id"
   end
 
   create_table "conversation_monitor_automation_deliveries", force: :cascade do |t|
@@ -1141,7 +1159,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.index ["copilot_tool_call_id"], name: "index_copilot_runs_on_copilot_tool_call_id", unique: true
     t.index ["source_run_id"], name: "index_copilot_runs_on_source_run_id"
     t.index ["status"], name: "index_copilot_runs_awaiting_approval", where: "((status)::text = 'awaiting_approval'::text)"
-    t.index ["status"], name: "index_copilot_runs_claimable", where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying])::text[]))"
+    t.index ["status"], name: "index_copilot_runs_claimable", where: "((status)::text = ANY (ARRAY[('queued'::character varying)::text, ('running'::character varying)::text]))"
     t.index ["user_id"], name: "index_copilot_runs_on_user_id"
   end
 
@@ -1295,8 +1313,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["data_import_id", "id"], name: "index_pending_data_import_items", where: "(status = 0)"
     t.index ["chatwoot_record_type", "chatwoot_record_id"], name: "idx_data_import_items_on_record"
+    t.index ["data_import_id", "id"], name: "index_pending_data_import_items", where: "(status = 0)"
     t.index ["data_import_id", "source_object_type", "source_object_id"], name: "idx_data_import_items_on_import_and_source", unique: true
     t.index ["data_import_id"], name: "index_data_import_items_on_data_import_id"
     t.index ["source_provider", "source_object_type", "source_object_id"], name: "idx_data_import_items_on_source"
@@ -1354,10 +1372,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_11_031108) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "inbox_id"
-    t.index ["account_id", "name", "template_type", "locale"], name: "index_email_templates_on_account_scope", unique: true, where: "(account_id IS NOT NULL) AND (inbox_id IS NULL)"
+    t.index ["account_id", "name", "template_type", "locale"], name: "index_email_templates_on_account_scope", unique: true, where: "((account_id IS NOT NULL) AND (inbox_id IS NULL))"
     t.index ["inbox_id", "name", "template_type", "locale"], name: "index_email_templates_on_inbox_scope", unique: true, where: "(inbox_id IS NOT NULL)"
     t.index ["inbox_id"], name: "index_email_templates_on_inbox_id"
-    t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "(account_id IS NULL) AND (inbox_id IS NULL)"
+    t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "((account_id IS NULL) AND (inbox_id IS NULL))"
   end
 
   create_table "folders", force: :cascade do |t|

@@ -62,11 +62,8 @@ const globalConfig = computed(() => store.getters['globalConfig/get']);
 
 const termsLink = computed(() =>
   t('REGISTER.TERMS_ACCEPT')
-    .replace('https://www.chatwoot.com/terms', globalConfig.value.termsURL)
-    .replace(
-      'https://www.chatwoot.com/privacy-policy',
-      globalConfig.value.privacyURL
-    )
+    .replace(/__TERMS_URL__/g, globalConfig.value.termsURL || '')
+    .replace(/__PRIVACY_URL__/g, globalConfig.value.privacyURL || '')
 );
 
 const sanitizedTermsLink = computed(() => DOMPurify.sanitize(termsLink.value));

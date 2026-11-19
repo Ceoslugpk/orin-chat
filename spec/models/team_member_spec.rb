@@ -8,6 +8,41 @@ RSpec.describe TeamMember do
     it { is_expected.to belong_to(:user) }
   end
 
+  describe 'permission change notifications' do
+    let(:account) { create(:account) }
+    let(:team) { create(:team, account: account) }
+    let(:user) { create(:user) }
+
+    before do
+      account.enable_features!(:custom_roles)
+      allow(Rails.configuration.dispatcher).to receive(:dispatch)
+    end
+
+    it 'notifies the user when team access is added' do
+      create(:team_member, team: team, user: user)
+
+      expect(Rails.configuration.dispatcher).to have_received(:dispatch).with(
+        'account.permissions_changed',
+        kind_of(Time),
+        account: account,
+        user_id: user.id
+      )
+    end
+
+    it 'notifies the user when team access is removed' do
+      team_member = create(:team_member, team: team, user: user)
+
+      team_member.destroy!
+
+      expect(Rails.configuration.dispatcher).to have_received(:dispatch).with(
+        'account.permissions_changed',
+        kind_of(Time),
+        account: account,
+        user_id: user.id
+      ).twice
+    end
+  end
+
   describe 'filtered unread count invalidation' do
     let(:account) { create(:account) }
     let(:team) { create(:team, account: account) }

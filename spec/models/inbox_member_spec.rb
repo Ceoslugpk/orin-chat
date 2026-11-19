@@ -19,6 +19,41 @@ RSpec.describe InboxMember do
     end
   end
 
+  describe 'permission change notifications' do
+    let(:account) { create(:account) }
+    let(:inbox) { create(:inbox, account: account) }
+    let(:user) { create(:user) }
+
+    before do
+      account.enable_features!(:custom_roles)
+      allow(Rails.configuration.dispatcher).to receive(:dispatch)
+    end
+
+    it 'notifies the user when inbox access is added' do
+      create(:inbox_member, inbox: inbox, user: user)
+
+      expect(Rails.configuration.dispatcher).to have_received(:dispatch).with(
+        'account.permissions_changed',
+        kind_of(Time),
+        account: account,
+        user_id: user.id
+      )
+    end
+
+    it 'notifies the user when inbox access is removed' do
+      inbox_member = create(:inbox_member, inbox: inbox, user: user)
+
+      inbox_member.destroy!
+
+      expect(Rails.configuration.dispatcher).to have_received(:dispatch).with(
+        'account.permissions_changed',
+        kind_of(Time),
+        account: account,
+        user_id: user.id
+      ).twice
+    end
+  end
+
   describe 'filtered unread count invalidation' do
     let(:account) { create(:account) }
     let(:inbox) { create(:inbox, account: account) }

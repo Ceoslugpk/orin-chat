@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Bashkëpilot",
         "DESCRIPTION": "Ofron sugjerime kontekstuale në kohë reale, rekomandime nga baza e njohurive dhe njohuri proaktive gjatë bisedave."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Model i personalizuar",
+      "CUSTOM_MODEL_PLACEHOLDER": "Shkruani ID-n e modelit të personalizuar",
+      "CUSTOM_MODEL_APPLY": "Zbato",
+      "CUSTOM_MODEL_CANCEL": "Anulo"
     },
     "FEATURES": {
       "TITLE": "Veçoritë",

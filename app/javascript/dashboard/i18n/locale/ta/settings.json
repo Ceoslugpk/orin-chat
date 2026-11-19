@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "தனிப்பயன் மாதிரி",
+      "CUSTOM_MODEL_PLACEHOLDER": "தனிப்பயன் மாதிரி ஐடியை உள்ளிடவும்",
+      "CUSTOM_MODEL_APPLY": "பயன்படுத்து",
+      "CUSTOM_MODEL_CANCEL": "ரத்து செய்"
     },
     "FEATURES": {
       "TITLE": "Features",

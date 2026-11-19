@@ -1,0 +1,46 @@
+tags:
+  - Custom Roles
+operationId: update-custom-role
+summary: Update a custom role
+description: Update a custom role definition in the account
+security:
+  - userBearerAuth: []
+  - userApiKey: []
+parameters:
+  - in: path
+    name: id
+    schema:
+      type: integer
+    required: true
+    description: The ID of the custom role
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/custom_role_create_update_payload'
+responses:
+  '200':
+    description: Success
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/custom_role'
+  '403':
+    description: Access denied
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'
+  '404':
+    description: Custom role not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'
+  '422':
+    description: Invalid custom role
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'

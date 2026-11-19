@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Kasama sa paglipad",
         "DESCRIPTION": "Nagbibigay ng mga mungkahi batay sa konteksto sa real-time, mga rekomendasyon mula sa knowledge base, at mga maagap na pananaw habang nag-uusap."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Pasadyang modelo",
+      "CUSTOM_MODEL_PLACEHOLDER": "Ilagay ang ID ng pasadyang modelo",
+      "CUSTOM_MODEL_APPLY": "Ilapat",
+      "CUSTOM_MODEL_CANCEL": "Kanselahin"
     },
     "FEATURES": {
       "TITLE": "Mga Tampok",

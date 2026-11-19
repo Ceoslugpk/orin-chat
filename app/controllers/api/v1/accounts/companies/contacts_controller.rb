@@ -9,6 +9,8 @@ class Api::V1::Accounts::Companies::ContactsController < Api::V1::Accounts::Comp
 
   before_action :authorize_company_read!, only: [:index, :search]
   before_action :authorize_company_update!, only: [:create, :destroy]
+  before_action :authorize_contact_read!, only: [:index, :search]
+  before_action :authorize_contact_update!, only: [:create, :destroy]
   before_action :set_current_page, only: [:index, :search]
   before_action :fetch_contact, only: [:destroy]
 
@@ -40,6 +42,14 @@ class Api::V1::Accounts::Companies::ContactsController < Api::V1::Accounts::Comp
   end
 
   private
+
+  def authorize_contact_read!
+    authorize Contact, :index?
+  end
+
+  def authorize_contact_update!
+    authorize Contact, :update?
+  end
 
   def set_current_page
     @current_page = params[:page] || 1

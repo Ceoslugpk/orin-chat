@@ -123,9 +123,16 @@ class Conversation < ApplicationRecord
   belongs_to :contact_inbox
   belongs_to :team, optional: true
   belongs_to :campaign, optional: true
+  belongs_to :sla_policy, optional: true
 
   has_many :mentions, dependent: :destroy_async
   has_many :messages, dependent: :destroy_async, autosave: true
+  has_many :conversation_links, dependent: :destroy_async
+  has_many :incoming_conversation_links, class_name: 'ConversationLink',
+                                         foreign_key: :linked_conversation_id, dependent: :destroy_async,
+                                         inverse_of: :linked_conversation
+  has_many :applied_slas, dependent: :destroy_async
+  has_many :sla_events, dependent: :destroy_async
   has_one :csat_survey_response, dependent: :destroy_async
   has_many :conversation_participants, dependent: :destroy_async
   has_many :notifications, as: :primary_actor, dependent: :destroy_async
@@ -264,6 +271,30 @@ class Conversation < ApplicationRecord
     "#{ENV.fetch('FRONTEND_URL', nil)}/survey/responses/#{uuid}"
   end
 
+  def applied_sla
+    return if sla_policy_id.blank?
+
+    if applied_slas.loaded?
+      applied_slas.detect { |record| record.sla_policy_id == sla_policy_id } ||
+        applied_slas.find_by(sla_policy_id: sla_policy_id)
+    else
+      applied_slas.find_by(sla_policy_id: sla_policy_id)
+    end
+  end
+
+  def current_sla_events
+    applied_sla ? applied_sla.sla_events.to_a : []
+  end
+
+  def linked_conversations
+    ids = ConversationLink.where('conversation_id = :id OR linked_conversation_id = :id', id: id)
+                          .pluck(:conversation_id, :linked_conversation_id)
+                          .flatten
+                          .uniq
+                          .excluding(id)
+    Conversation.where(id: ids)
+  end
+
   def dispatch_conversation_updated_event(previous_changes = nil)
     dispatcher_dispatch(CONVERSATION_UPDATED, previous_changes)
   end
@@ -276,6 +307,9 @@ class Conversation < ApplicationRecord
     create_activity
     invalidate_filtered_unread_count_conversation
     notify_conversation_updation
+    apply_sla_policy_change
+    update_sla_completion
+    update_sla_next_response
   end
 
   def handle_resolved_status_change
@@ -285,6 +319,24 @@ class Conversation < ApplicationRecord
     # rubocop:disable Rails/SkipsModelValidations
     update_column(:waiting_since, nil)
     # rubocop:enable Rails/SkipsModelValidations
+  end
+
+  def apply_sla_policy_change
+    Sla::ApplyPolicyService.new(self).perform if saved_change_to_sla_policy_id?
+  end
+
+  def update_sla_completion
+    return unless saved_change_to_status?
+
+    if status == 'resolved'
+      Sla::CompletePolicyService.new(self).perform
+    else
+      Sla::ReopenPolicyService.new(self).perform
+    end
+  end
+
+  def update_sla_next_response
+    Sla::NextResponseService.new(self).perform if saved_change_to_waiting_since?
   end
 
   def ensure_snooze_until_reset

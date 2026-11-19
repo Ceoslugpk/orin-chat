@@ -168,7 +168,7 @@ class Conversations::UnreadCounts::Counter
   end
 
   def custom_role_agent?
-    account_user&.agent? && account_user.custom_role_id.present?
+    account_user&.uses_custom_role_permissions?
   end
 
   def permissions

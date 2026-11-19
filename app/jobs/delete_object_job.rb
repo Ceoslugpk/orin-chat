@@ -4,16 +4,28 @@ class DeleteObjectJob < ApplicationJob
   BATCH_SIZE = 5_000
 
   def perform(object, user = nil, ip = nil)
-    # Pre-purge heavy associations for large objects to avoid
-    # timeouts & race conditions due to destroy_async fan-out.
-    purge_heavy_associations(object)
-    object.destroy!
-    process_post_deletion_tasks(object, user, ip)
+    AuditLog.with_context(user: user, ip: ip) do
+      # Keep large purges batched, while attributing their audits to the actor.
+      purge_heavy_associations(object)
+      object.class.transaction do
+        object.destroy!
+        process_post_deletion_tasks(object, user, ip)
+      end
+    end
   end
 
-  def process_post_deletion_tasks(object, user, ip); end
+  def process_post_deletion_tasks(object, user, _ip)
+    record_conversation_deletion(object, user) if object.is_a?(Conversation)
+  end
 
   private
+
+  # Conversations are audited here rather than through a destroy callback, so
+  # deleting an inbox or account does not write one audit per conversation.
+  def record_conversation_deletion(conversation, user)
+    AuditLog.record!(auditable: conversation, account: conversation.account, action: 'destroy', user: user,
+                     changes: { display_id: conversation.display_id })
+  end
 
   def heavy_associations
     {

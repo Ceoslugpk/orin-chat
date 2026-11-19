@@ -16,6 +16,11 @@ import PaginationFooter from 'dashboard/components-next/pagination/PaginationFoo
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import AuditLogFilters from './components/AuditLogFilters.vue';
+import AuditLogsAPI from 'dashboard/api/auditLogs';
+import {
+  generateFileName,
+  downloadCsvFile,
+} from 'dashboard/helper/downloadHelper';
 import {
   generateTranslationPayload,
   generateLogActionKey,
@@ -37,6 +42,9 @@ const records = computed(() => getters['auditlogs/getAuditLogs'].value);
 const uiFlags = computed(() => getters['auditlogs/getUIFlags'].value);
 const meta = computed(() => getters['auditlogs/getMeta'].value);
 const agentList = computed(() => getters['agents/getAgents'].value);
+const customRoleList = computed(
+  () => getters['customRole/getCustomRoles']?.value ?? []
+);
 
 const searchQuery = ref(route.query.q ?? '');
 // The search term this page last put in the URL. Echoes of our own navigation
@@ -82,8 +90,32 @@ const clearFilters = () => {
   router.push({ name: 'auditlogs_list', query: {} });
 };
 
+const isDownloading = ref(false);
+const downloadAuditLogs = async () => {
+  isDownloading.value = true;
+  try {
+    const response = await AuditLogsAPI.download(filters.value);
+    downloadCsvFile(
+      generateFileName({
+        type: 'audit-logs',
+        to: Math.floor(Date.now() / 1000),
+      }),
+      response.data
+    );
+  } catch (error) {
+    useAlert(t('AUDIT_LOGS.DOWNLOAD_FAILED'));
+  } finally {
+    isDownloading.value = false;
+  }
+};
+
 const generateLogText = auditLogItem => {
-  const payload = generateTranslationPayload(auditLogItem, agentList.value);
+  const payload = generateTranslationPayload(
+    auditLogItem,
+    agentList.value,
+    customRoleList.value,
+    t
+  );
   const translationKey = generateLogActionKey(auditLogItem);
 
   const joinIfArray = value => {
@@ -144,6 +176,7 @@ watch(
 
 onMounted(() => {
   store.dispatch('agents/get');
+  store.dispatch('customRole/getCustomRole');
   fetchAuditLogs();
 });
 </script>
@@ -181,15 +214,27 @@ onMounted(() => {
             {{ $t('AUDIT_LOGS.COUNT', { n: meta.totalEntries }) }}
           </span>
         </template>
-        <template v-if="hasActiveFilters" #actions>
-          <Button
-            :label="$t('AUDIT_LOGS.FILTERS.CLEAR_ALL')"
-            icon="i-lucide-x"
-            slate
-            ghost
-            sm
-            @click="clearFilters"
-          />
+        <template #actions>
+          <div class="flex items-center gap-2">
+            <Button
+              :label="$t('AUDIT_LOGS.DOWNLOAD')"
+              icon="i-lucide-download"
+              slate
+              faded
+              sm
+              :is-loading="isDownloading"
+              @click="downloadAuditLogs"
+            />
+            <Button
+              v-if="hasActiveFilters"
+              :label="$t('AUDIT_LOGS.FILTERS.CLEAR_ALL')"
+              icon="i-lucide-x"
+              slate
+              ghost
+              sm
+              @click="clearFilters"
+            />
+          </div>
         </template>
       </BaseSettingsHeader>
     </template>

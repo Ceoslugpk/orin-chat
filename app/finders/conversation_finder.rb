@@ -191,9 +191,11 @@ class ConversationFinder
   end
 
   def conversations_base_query
-    @conversations.includes(
+    query = @conversations.includes(
       :taggings, :team, :contact_inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }
     ).preload(inbox: :channel, ai_assignee: { avatar_attachment: [:blob] })
+    query = query.preload(applied_slas: :sla_events) if current_account.feature_enabled?('sla')
+    query
   end
 
   def conversations

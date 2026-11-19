@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Model kustom",
+      "CUSTOM_MODEL_PLACEHOLDER": "Masukkan ID model kustom",
+      "CUSTOM_MODEL_APPLY": "Terapkan",
+      "CUSTOM_MODEL_CANCEL": "Batal"
     },
     "FEATURES": {
       "TITLE": "Fitur",

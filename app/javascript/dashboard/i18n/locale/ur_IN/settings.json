@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "کو-پائلٹ",
         "DESCRIPTION": "گفتگوؤں کے دوران حقیقی وقت میں سیاق و سباق کی تجاویز، نالج بیس کی سفارشات، اور پیشگی بصیرت فراہم کرتا ہے۔."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "کسٹم ماڈل",
+      "CUSTOM_MODEL_PLACEHOLDER": "کسٹم ماڈل آئی ڈی درج کریں",
+      "CUSTOM_MODEL_APPLY": "لاگو کریں",
+      "CUSTOM_MODEL_CANCEL": "منسوخ کریں"
     },
     "FEATURES": {
       "TITLE": "خصوصیات",

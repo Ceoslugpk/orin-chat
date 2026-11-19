@@ -7,7 +7,7 @@ vi.mock('vuex', () => ({
   useStore: () => ({
     getters: {
       'globalConfig/get': {
-        installationName: 'Chatwoot',
+        installationName: 'Orin Chat',
         logo: '/logo.svg',
         logoDark: '/logo-dark.svg',
       },

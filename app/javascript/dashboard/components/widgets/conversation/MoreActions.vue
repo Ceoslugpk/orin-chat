@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { emitter } from 'shared/helpers/mitt';
 import EmailTranscriptModal from './EmailTranscriptModal.vue';
+import ConversationLinksModal from './ConversationLinksModal.vue';
 import ResolveAction from '../../buttons/ResolveAction.vue';
 import ButtonV4 from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
@@ -21,6 +22,7 @@ const store = useStore();
 const { t } = useI18n();
 
 const [showEmailActionsModal, toggleEmailModal] = useToggle(false);
+const [showLinksModal, toggleLinksModal] = useToggle(false);
 const [showActionsDropdown, toggleDropdown] = useToggle(false);
 
 const currentChat = computed(() => store.getters.getSelectedChat);
@@ -50,6 +52,13 @@ const actionMenuItems = computed(() => {
     label: t('CONTACT_PANEL.SEND_TRANSCRIPT'),
     action: 'send_transcript',
     value: 'send_transcript',
+  });
+
+  items.push({
+    icon: 'i-lucide-git-merge',
+    label: t('CONVERSATION.HEADER.RELATED.TITLE'),
+    action: 'related_conversations',
+    value: 'related_conversations',
   });
 
   const { enabled, disabledInConversation, language } = autoTranslate.value;
@@ -96,6 +105,8 @@ const handleActionClick = ({ action }) => {
     useAlert(t('CONTACT_PANEL.UNMUTED_SUCCESS'));
   } else if (action === 'send_transcript') {
     toggleEmailModal();
+  } else if (action === 'related_conversations') {
+    toggleLinksModal();
   } else if (action === 'auto_translate') {
     toggleAutoTranslate();
   }
@@ -165,6 +176,12 @@ onUnmounted(() => {
       :show="showEmailActionsModal"
       :current-chat="currentChat"
       @cancel="toggleEmailModal"
+    />
+    <ConversationLinksModal
+      v-if="showLinksModal"
+      :show="showLinksModal"
+      :conversation="currentChat"
+      @close="toggleLinksModal(false)"
     />
   </div>
 </template>

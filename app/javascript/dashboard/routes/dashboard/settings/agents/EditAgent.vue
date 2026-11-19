@@ -8,6 +8,8 @@ import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Auth from '../../../../api/auth';
 import wootConstants from 'dashboard/constants/globals';
+import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import { getAgentRoleOptions } from 'dashboard/helper/customRoleHelper';
 
 const props = defineProps({
   id: {
@@ -49,7 +51,27 @@ const { t } = useI18n();
 
 const agentName = ref(props.name);
 const agentAvailability = ref(props.availability);
-const selectedRoleId = ref(props.customRoleId || props.type);
+const roleSelectionTouched = ref(false);
+
+const uiFlags = useMapGetter('agents/getUIFlags');
+const getCustomRoles = useMapGetter('customRole/getCustomRoles');
+const isFeatureEnabledonAccount = useMapGetter(
+  'accounts/isFeatureEnabledonAccount'
+);
+const currentAccountId = useMapGetter('getCurrentAccountId');
+
+const customRolesEnabled = computed(() =>
+  isFeatureEnabledonAccount.value(
+    currentAccountId.value,
+    FEATURE_FLAGS.CUSTOM_ROLES
+  )
+);
+
+const selectedRoleId = ref(
+  customRolesEnabled.value && props.customRoleId
+    ? props.customRoleId
+    : props.type
+);
 const agentCredentials = ref({ email: props.email });
 
 const rules = {
@@ -68,38 +90,22 @@ const pageTitle = computed(
   () => `${t('AGENT_MGMT.EDIT.TITLE')} - ${props.name}`
 );
 
-const uiFlags = useMapGetter('agents/getUIFlags');
-const getCustomRoles = useMapGetter('customRole/getCustomRoles');
-
-const roles = computed(() => {
-  const defaultRoles = [
-    {
-      id: 'administrator',
-      name: 'administrator',
-      label: t('AGENT_MGMT.AGENT_TYPES.ADMINISTRATOR'),
-    },
-    {
-      id: 'agent',
-      name: 'agent',
-      label: t('AGENT_MGMT.AGENT_TYPES.AGENT'),
-    },
-  ];
-
-  const customRoles = getCustomRoles.value.map(role => ({
-    id: role.id,
-    name: `custom_${role.id}`,
-    label: role.name,
-  }));
-
-  return [...defaultRoles, ...customRoles];
-});
-
-const selectedRole = computed(() =>
-  roles.value.find(
-    role =>
-      role.id === selectedRoleId.value || role.name === selectedRoleId.value
-  )
+const roles = computed(() =>
+  getAgentRoleOptions(customRolesEnabled.value ? getCustomRoles.value : [], t)
 );
+
+const selectedRole = computed(
+  () =>
+    roles.value.find(
+      role =>
+        role.id === selectedRoleId.value || role.name === selectedRoleId.value
+    ) || roles.value.find(role => role.name === props.type)
+);
+
+const onRoleChange = () => {
+  roleSelectionTouched.value = true;
+  v$.value.selectedRoleId.$touch();
+};
 
 const statusList = computed(() => {
   return [
@@ -128,11 +134,16 @@ const editAgent = async () => {
       availability: agentAvailability.value,
     };
 
+    // Preserve hidden legacy role metadata on unrelated edits.
     if (selectedRole.value.name.startsWith('custom_')) {
-      payload.custom_role_id = selectedRole.value.id;
+      if (selectedRole.value.id !== props.customRoleId) {
+        payload.custom_role_id = selectedRole.value.id;
+      }
     } else {
       payload.role = selectedRole.value.name;
-      payload.custom_role_id = null;
+      if (roleSelectionTouched.value) {
+        payload.custom_role_id = null;
+      }
     }
 
     await store.dispatch('agents/update', payload);
@@ -172,7 +183,7 @@ const resetPassword = async () => {
       <div class="w-full">
         <label :class="{ error: v$.selectedRoleId.$error }">
           {{ $t('AGENT_MGMT.EDIT.FORM.AGENT_TYPE.LABEL') }}
-          <select v-model="selectedRoleId" @change="v$.selectedRoleId.$touch">
+          <select v-model="selectedRoleId" @change="onRoleChange">
             <option v-for="role in roles" :key="role.id" :value="role.id">
               {{ role.label }}
             </option>

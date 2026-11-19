@@ -59,6 +59,8 @@ tags:
     description: Account-specific Agent Bots
   - name: Agents
     description: Agent management APIs
+  - name: Custom Roles
+    description: Custom role definition management APIs
   - name: Campaigns
     description: Create, schedule, and manage campaigns. Requires an account administrator and API access enabled for the account.
   - name: Canned Responses
@@ -117,6 +119,7 @@ x-tagGroups:
       - Account AgentBots
       - Account
       - Agents
+      - Custom Roles
       - Audit Logs
       - Campaigns
       - Canned Responses

@@ -40,6 +40,13 @@
         "TITLE": "General settings",
         "NOTE": ""
       },
+      "BRANDING": {
+        "TITLE": "Branding",
+        "NOTE": "Control whether the product name and logo appear in the widget, help center, and customer-facing pages.",
+        "LABEL": "Hide “Powered by” branding",
+        "SUCCESS": "Branding preference updated",
+        "ERROR": "Could not update the branding preference"
+      },
       "ACCOUNT_ID": {
         "TITLE": "Account ID",
         "NOTE": "This ID is required if you are building an API based integration"
@@ -161,14 +168,14 @@
         "CUSTOM_EMAIL_DOMAIN_ENABLED": "You can receive emails in your custom domain now."
       }
     },
-    "UPDATE_CHATWOOT": "An update {latestChatwootVersion} for Chatwoot is available. Please update your instance.",
+    "UPDATE_CHATWOOT": "An update {latestChatwootVersion} is available for your instance. Please update when convenient.",
     "LEARN_MORE": "Learn more",
     "PAYMENT_PENDING": "Your account payment is past due. Please update your payment information to avoid subscription cancellation.",
     "PAYMENT_PENDING_AGENT": "Your account payment is past due. Please contact your administrator to resolve it.",
     "INSTALLATION_PAYMENT_PENDING": "Your installation payment is past due. Please open billing to avoid subscription cancellation.",
     "INSTALLATION_PAYMENT_PENDING_MEMBER": "Your installation payment is past due. Please contact your installation owner or super admin to resolve it.",
-    "UPGRADE": "Upgrade to continue using Chatwoot",
-    "LIMITS_UPGRADE": "Your account has exceeded the usage limits, please upgrade your plan to continue using Chatwoot",
+    "UPGRADE": "Upgrade to continue using Orin Chat",
+    "LIMITS_UPGRADE": "Your account has exceeded the usage limits, please upgrade your plan to continue using Orin Chat",
     "OPEN_BILLING": "Open billing"
   },
   "FORMS": {

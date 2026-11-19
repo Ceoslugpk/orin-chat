@@ -1,5 +1,6 @@
 class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseController
   before_action :validate_assignment_targets, only: :create, if: -> { normalized_type == 'Conversation' }
+  before_action :validate_required_attributes, only: :create, if: -> { resolving_conversations? }
 
   def create
     case normalized_type
@@ -7,7 +8,7 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
       enqueue_conversation_job
       head :ok
     when 'Contact'
-      check_authorization_for_contact_action
+      authorize_contact_action
       enqueue_contact_job
       head :ok
     else
@@ -34,6 +35,26 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
     render_could_not_create_error('Invalid team_id')
   end
 
+  def resolving_conversations?
+    normalized_type == 'Conversation' && conversation_params.dig(:fields, :status).to_s == 'resolved'
+  end
+
+  def validate_required_attributes
+    scope = @current_account.conversations.where(display_id: params[:ids])
+    scope = Conversations::PermissionFilterService.new(scope, current_user, @current_account).perform
+
+    missing = scope.filter_map do |conversation|
+      attributes = Conversations::RequiredAttributesService.new(conversation).missing_attributes
+      { id: conversation.display_id, missing_attributes: attributes } if attributes.any?
+    end
+    return if missing.empty?
+
+    render json: {
+      error: I18n.t('errors.conversation.required_attributes_missing'),
+      conversations: missing
+    }, status: :unprocessable_content
+  end
+
   def enqueue_conversation_job
     ::BulkActionsJob.perform_later(
       account: @current_account,
@@ -54,8 +75,8 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
     params[:action_name] == 'delete'
   end
 
-  def check_authorization_for_contact_action
-    authorize(Contact, :destroy?) if delete_contact_action?
+  def authorize_contact_action
+    authorize(Contact, delete_contact_action? ? :destroy? : :update?)
   end
 
   def conversation_params

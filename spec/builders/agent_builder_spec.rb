@@ -98,6 +98,27 @@ RSpec.describe AgentBuilder, type: :model do
       end
     end
 
+    context 'when a custom role is provided' do
+      let(:custom_role) { create(:custom_role, account: account) }
+      let(:params) { super().merge(custom_role_id: custom_role.id) }
+
+      it 'assigns the definition to the new account user' do
+        user = agent_builder.perform
+
+        expect(AccountUser.find_by!(user: user, account: account).custom_role_id).to eq(custom_role.id)
+      end
+    end
+
+    context 'when the custom role belongs to another account' do
+      let(:custom_role) { create(:custom_role) }
+      let(:params) { super().merge(custom_role_id: custom_role.id) }
+
+      it 'raises a validation error without creating the user' do
+        expect { agent_builder.perform }.to raise_error(ActiveRecord::RecordInvalid)
+        expect(User.from_email(email)).to be_nil
+      end
+    end
+
     context 'when a temporary password is generated' do
       it 'sets a temporary password for the user' do
         user = agent_builder.perform

@@ -557,6 +557,7 @@ RSpec.describe 'Accounts API', type: :request do
         auto_resolve_after: 40,
         auto_resolve_message: 'Auto resolved',
         auto_resolve_ignore_waiting: false,
+        disable_branding: true,
         timezone: 'Asia/Kolkata',
         industry: 'Technology',
         company_size: '1-10'
@@ -583,13 +584,23 @@ RSpec.describe 'Accounts API', type: :request do
         expect(account.reload.domain).to eq(params[:domain])
         expect(account.reload.support_email).to eq(params[:support_email])
 
-        %w[auto_resolve_after auto_resolve_message auto_resolve_ignore_waiting].each do |attribute|
+        %w[auto_resolve_after auto_resolve_message auto_resolve_ignore_waiting disable_branding].each do |attribute|
           expect(account.reload.settings[attribute]).to eq(params[attribute.to_sym])
         end
 
         %w[timezone industry company_size].each do |attribute|
           expect(account.reload.custom_attributes[attribute]).to eq(params[attribute.to_sym])
         end
+      end
+
+      it 'stores the per-account branding preference' do
+        patch "/api/v1/accounts/#{account.id}",
+              params: { disable_branding: false },
+              headers: admin.create_new_auth_token,
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(account.reload.branding_disabled?).to be(false)
       end
 
       it 'updates onboarding step to invite_team if onboarding step is present in account custom attributes' do

@@ -17,8 +17,6 @@ import { useWindowSize, useEventListener } from '@vueuse/core';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
-import SidebarChangelogCard from './SidebarChangelogCard.vue';
-import SidebarChangelogButton from './SidebarChangelogButton.vue';
 import ChannelLeaf from './ChannelLeaf.vue';
 import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import EmojiIcon from 'next/emoji-icon-picker/EmojiIcon.vue';
@@ -59,9 +57,6 @@ const searchShortcut = useKbd([`$mod`, 'k']);
 const commandBar = useCommandBar();
 const { t } = useI18n();
 
-const isACustomBrandedInstance = useMapGetter(
-  'globalConfig/isACustomBrandedInstance'
-);
 const isRTL = useMapGetter('accounts/isRTL');
 
 const { width: windowWidth } = useWindowSize();
@@ -91,6 +86,10 @@ const hasAdvancedAssignment = computed(() => {
     accountId.value,
     FEATURE_FLAGS.ADVANCED_ASSIGNMENT
   );
+});
+
+const isSlaEnabled = computed(() => {
+  return isFeatureEnabledonAccount.value(accountId.value, FEATURE_FLAGS.SLA);
 });
 
 const hasConversationUnreadCounts = computed(() => {
@@ -720,11 +719,15 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.CSAT'),
           to: accountScopedRoute('csat_reports'),
         },
-        {
-          name: 'Reports SLA',
-          label: t('SIDEBAR.REPORTS_SLA'),
-          to: accountScopedRoute('sla_reports'),
-        },
+        ...(isSlaEnabled.value
+          ? [
+              {
+                name: 'Reports SLA',
+                label: t('SIDEBAR.REPORTS_SLA'),
+                to: accountScopedRoute('sla_reports'),
+              },
+            ]
+          : []),
         {
           name: 'Reports Bot',
           label: t('SIDEBAR.REPORTS_BOT'),
@@ -949,12 +952,16 @@ const menuItems = computed(() => {
           icon: 'i-lucide-shield-plus',
           to: accountScopedRoute('custom_roles_list'),
         },
-        {
-          name: 'Settings Sla',
-          label: t('SIDEBAR.SLA'),
-          icon: 'i-lucide-clock-alert',
-          to: accountScopedRoute('sla_list'),
-        },
+        ...(isSlaEnabled.value
+          ? [
+              {
+                name: 'Settings Sla',
+                label: t('SIDEBAR.SLA'),
+                icon: 'i-lucide-clock-alert',
+                to: accountScopedRoute('sla_list'),
+              },
+            ]
+          : []),
         {
           name: 'Conversation Workflow',
           label: t('SIDEBAR.CONVERSATION_WORKFLOW'),
@@ -967,12 +974,16 @@ const menuItems = computed(() => {
           icon: 'i-lucide-shield',
           to: accountScopedRoute('security_settings_index'),
         },
-        {
-          name: 'Settings Billing',
-          label: t('SIDEBAR.BILLING'),
-          icon: 'i-lucide-credit-card',
-          to: accountScopedRoute('billing_settings_index'),
-        },
+        ...(isOnChatwootCloud.value
+          ? [
+              {
+                name: 'Settings Billing',
+                label: t('SIDEBAR.BILLING'),
+                icon: 'i-lucide-credit-card',
+                to: accountScopedRoute('billing_settings_index'),
+              },
+            ]
+          : []),
       ],
     },
   ];
@@ -1119,20 +1130,6 @@ const menuItems = computed(() => {
     >
       <div
         class="pointer-events-none absolute inset-x-0 -top-[1.938rem] h-8 bg-gradient-to-t from-n-background to-transparent"
-      />
-      <SidebarChangelogCard
-        v-if="
-          isOnChatwootCloud &&
-          !isACustomBrandedInstance &&
-          !isEffectivelyCollapsed
-        "
-      />
-      <SidebarChangelogButton
-        v-if="
-          isOnChatwootCloud &&
-          !isACustomBrandedInstance &&
-          isEffectivelyCollapsed
-        "
       />
       <div
         class="px-1 py-1.5 flex-shrink-0 flex w-full z-50 gap-2 items-center border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)]"

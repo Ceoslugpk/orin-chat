@@ -13,6 +13,12 @@ internal_check_new_versions_job:
   cron: '0 0 * * *'
   class: 'Internal::TriggerDailyScheduledItemsJob'
   queue: scheduled_jobs
+
+# deletes audit logs older than AUDIT_LOG_RETENTION_DAYS when configured
+audit_log_retention_job:
+  cron: '30 3 * * *'
+  class: 'AuditLog::RetentionJob'
+  queue: purgable
 # # executed At every 5th minute..
 trigger_scheduled_items_job:
   cron: '*/5 * * * *'

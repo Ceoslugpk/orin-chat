@@ -4,7 +4,7 @@ class PortalPolicy < ApplicationPolicy
   end
 
   def update?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def show?
@@ -12,31 +12,37 @@ class PortalPolicy < ApplicationPolicy
   end
 
   def edit?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def create?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def destroy?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def logo?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def remove_locale?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def send_instructions?
-    @account_user.administrator?
+    knowledge_base_manage?
   end
 
   def ssl_status?
     @account.users.include?(@user)
+  end
+
+  private
+
+  def knowledge_base_manage?
+    administrator? || custom_role_permission?('knowledge_base_manage')
   end
 end
 

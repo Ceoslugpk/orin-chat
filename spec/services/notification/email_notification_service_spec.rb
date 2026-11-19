@@ -68,5 +68,19 @@ describe Notification::EmailNotificationService do
         described_class.new(notification: notification).perform
       end
     end
+
+    context 'when a custom role loses conversation access before delivery' do
+      before do
+        account.enable_features!(:custom_roles)
+        agent.account_users.find_by!(account: account).update!(
+          custom_role: create(:custom_role, account: account, permissions: ['contact_manage'])
+        )
+      end
+
+      it 'does not send email' do
+        expect(AgentNotifications::ConversationNotificationsMailer).not_to receive(:with)
+        described_class.new(notification: notification).perform
+      end
+    end
   end
 end

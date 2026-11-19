@@ -7,6 +7,107 @@ RSpec.describe 'Agents API', type: :request do
   let!(:admin) { create(:user, custom_attributes: { test: 'test' }, account: account, role: :administrator) }
   let!(:agent) { create(:user, account: account, email: 'exists@example.com', role: :agent) }
 
+  describe 'custom-role assignment' do
+    let(:custom_role) { create(:custom_role, account: account, permissions: ['report_manage']) }
+
+    [false, true].each do |nested|
+      it "assigns a role on create with #{nested ? 'nested' : 'flat'} parameters" do
+        email = "role-agent-#{nested}@example.test"
+        attributes = { name: 'Role agent', email: email, custom_role_id: custom_role.id }
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/agents",
+               params: nested ? { agent: attributes } : attributes, headers: admin.create_new_auth_token, as: :json
+        end.to change(User, :count).by(1)
+
+        expect(response).to have_http_status(:success)
+        membership = User.from_email(email).account_users.find_by!(account: account)
+        expect(membership.custom_role_id).to eq(custom_role.id)
+      end
+
+      it "assigns a role on update with #{nested ? 'nested' : 'flat'} parameters" do
+        attributes = { custom_role_id: custom_role.id }
+
+        put "/api/v1/accounts/#{account.id}/agents/#{agent.id}",
+            params: nested ? { agent: attributes } : attributes, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(agent.account_users.find_by!(account: account).custom_role_id).to eq(custom_role.id)
+      end
+
+      it "clears a stored role reference with #{nested ? 'nested' : 'flat'} parameters when promoting to administrator" do
+        membership = agent.account_users.find_by!(account: account)
+        membership.update!(custom_role: custom_role)
+        attributes = { name: 'Promoted agent', role: 'administrator', custom_role_id: nil }
+
+        put "/api/v1/accounts/#{account.id}/agents/#{agent.id}",
+            params: nested ? { agent: attributes } : attributes, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(membership.reload.custom_role_id).to be_nil
+        expect(membership.role).to eq('administrator')
+        expect(agent.reload.name).to eq('Promoted agent')
+      end
+    end
+
+    it 'rejects a role definition from another account on create' do
+      foreign_role = create(:custom_role)
+      email = 'foreign-role-agent@example.test'
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/agents",
+             params: { agent: { name: 'Foreign role', email: email, custom_role_id: foreign_role.id } },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to change(User, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body['attributes']).to include('custom_role')
+    end
+
+    it 'rejects assigning a role to an administrator' do
+      post "/api/v1/accounts/#{account.id}/agents",
+           params: { agent: { name: 'Admin role', email: 'admin-role@example.test', role: 'administrator',
+                              custom_role_id: custom_role.id } },
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(User.from_email('admin-role@example.test')).to be_nil
+    end
+
+    it 'rejects a role definition from another account on update without changing the membership' do
+      foreign_role = create(:custom_role)
+
+      put "/api/v1/accounts/#{account.id}/agents/#{agent.id}",
+          params: { agent: { custom_role_id: foreign_role.id } }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(agent.account_users.find_by!(account: account).custom_role_id).to be_nil
+    end
+
+    it 'rolls identity changes back when membership validation fails' do
+      original_name = agent.name
+      membership = agent.account_users.find_by!(account: account)
+      membership.update!(custom_role: custom_role)
+
+      put "/api/v1/accounts/#{account.id}/agents/#{agent.id}",
+          params: { agent: { name: 'Must not persist', role: 'administrator' } }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body['attributes']).to include('custom_role')
+      expect(agent.reload.name).to eq(original_name)
+      expect(membership.reload.role).to eq('agent')
+      expect(membership.custom_role_id).to eq(custom_role.id)
+    end
+
+    it 'keeps built-in role updates compatible with an explicit null custom role' do
+      put "/api/v1/accounts/#{account.id}/agents/#{agent.id}",
+          params: { agent: { role: 'administrator', custom_role_id: nil } }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(agent.account_users.find_by!(account: account).role).to eq('administrator')
+    end
+  end
+
   describe 'GET /api/v1/accounts/{account.id}/agents' do
     context 'when it is an unauthenticated user' do
       it 'returns unauthorized' do
@@ -39,6 +140,18 @@ RSpec.describe 'Agents API', type: :request do
         expect(response).to have_http_status(:success)
         data = response.parsed_body
         expect(data.first['custom_attributes']['test']).to eq('test')
+      end
+
+      it 'returns the stored custom role reference' do
+        custom_role = create(:custom_role, account: account)
+        agent.account_users.find_by!(account: account).update!(custom_role: custom_role)
+
+        get "/api/v1/accounts/#{account.id}/agents",
+            headers: agent.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body.find { |record| record['id'] == agent.id }['custom_role_id']).to eq(custom_role.id)
       end
     end
   end

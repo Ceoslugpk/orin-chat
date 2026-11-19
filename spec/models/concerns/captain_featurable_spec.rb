@@ -110,6 +110,60 @@ RSpec.describe CaptainFeaturable do
     end
   end
 
+  describe 'custom model library' do
+    before do
+      InstallationConfig.find_or_initialize_by(name: 'CAPTAIN_OPEN_AI_API_KEY').update!(value: 'openai-key')
+      InstallationConfig.find_or_initialize_by(name: 'CAPTAIN_ANTHROPIC_API_KEY').update!(value: 'anthropic-key')
+    end
+
+    it 'normalizes entries and infers a missing provider from the model name' do
+      account.update!(captain_custom_models: [
+                        { id: '  local-llama  ', display_name: '  Llama  ' },
+                        { 'id' => 'claude-custom' }
+                      ])
+
+      expect(account.reload.captain_custom_models).to eq(
+        [
+          { 'id' => 'local-llama', 'display_name' => 'Llama', 'provider' => 'openai' },
+          { 'id' => 'claude-custom', 'provider' => 'anthropic' }
+        ]
+      )
+    end
+
+    it 'drops duplicate ids and blank entries' do
+      account.update!(captain_custom_models: [
+                        { id: 'local-llama', provider: 'openai' },
+                        { id: 'local-llama', provider: 'openai' },
+                        { id: '   ', provider: 'openai' }
+                      ])
+
+      expect(account.reload.captain_custom_models).to eq(
+        [{ 'id' => 'local-llama', 'provider' => 'openai' }]
+      )
+    end
+
+    it 'clears the library when it is blank' do
+      account.update!(captain_custom_models: [{ id: 'local-llama', provider: 'openai' }])
+      account.update!(captain_custom_models: [])
+
+      expect(account.reload.captain_custom_models).to be_nil
+    end
+
+    it 'rejects a provider that has no credentials or endpoint' do
+      account.captain_custom_models = [{ id: 'gemini-custom', provider: 'gemini' }]
+
+      expect(account).not_to be_valid
+      expect(account.errors.full_messages.join).to include('configure Gemini credentials or endpoint before adding gemini-custom')
+    end
+
+    it 'rejects an unknown provider' do
+      account.captain_custom_models = [{ id: 'mystery', provider: 'acme' }]
+
+      expect(account).not_to be_valid
+      expect(account.errors.full_messages.join).to include('must be openai, anthropic, or gemini')
+    end
+  end
+
   describe 'integration with existing captain_preferences' do
     it 'enabled? methods use the same logic as captain_preferences[:features]' do
       account.update!(captain_features: { 'editor' => true, 'copilot' => true })

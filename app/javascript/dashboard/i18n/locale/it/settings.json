@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Fornisce suggerimenti contestuali in tempo reale, consigli sulla knowledge base e insight proattivi durante le conversazioni."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Modello personalizzato",
+      "CUSTOM_MODEL_PLACEHOLDER": "Inserisci l’ID del modello personalizzato",
+      "CUSTOM_MODEL_APPLY": "Applica",
+      "CUSTOM_MODEL_CANCEL": "Annulla"
     },
     "FEATURES": {
       "TITLE": "Funzionalità",

@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Anpassad modell",
+      "CUSTOM_MODEL_PLACEHOLDER": "Ange ID för anpassad modell",
+      "CUSTOM_MODEL_APPLY": "Tillämpa",
+      "CUSTOM_MODEL_CANCEL": "Avbryt"
     },
     "FEATURES": {
       "TITLE": "Funktioner",

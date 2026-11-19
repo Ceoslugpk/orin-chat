@@ -5,8 +5,7 @@ class Conversations::EventDataPresenter < SimpleDelegator
       **push_reply_state,
       channel: inbox.try(:channel_type),
       contact_inbox: contact_inbox,
-      id: display_id,
-      inbox_id: inbox_id,
+      id: display_id, inbox_id: inbox_id,
       messages: push_messages,
       labels: label_list,
       meta: push_meta,
@@ -17,6 +16,7 @@ class Conversations::EventDataPresenter < SimpleDelegator
       first_reply_created_at: first_reply_created_at,
       priority: priority,
       waiting_since: waiting_since.to_i,
+      **push_sla,
       **push_timestamps
     }
   end
@@ -53,6 +53,15 @@ class Conversations::EventDataPresenter < SimpleDelegator
     {
       anonymous_caller: contact_inbox&.anonymous_caller?,
       can_reply: can_reply?
+    }
+  end
+
+  def push_sla
+    return {} unless account.feature_enabled?('sla')
+
+    {
+      applied_sla: applied_sla&.push_event_data,
+      sla_events: current_sla_events.map(&:push_event_data)
     }
   end
 

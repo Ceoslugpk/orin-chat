@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Kopilot",
         "DESCRIPTION": "Söhbətlər zamanı real vaxtda kontekstual təkliflər, bilik bazası tövsiyələri və proaktiv anlayışlar təqdim edir."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "Xüsusi model",
+      "CUSTOM_MODEL_PLACEHOLDER": "Xüsusi model ID daxil edin",
+      "CUSTOM_MODEL_APPLY": "Tətbiq et",
+      "CUSTOM_MODEL_CANCEL": "Ləğv et"
     },
     "FEATURES": {
       "TITLE": "Xüsusiyyətlər",

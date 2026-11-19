@@ -36,6 +36,39 @@ RSpec.describe 'Contact Merge Action API', type: :request do
         expect(ContactMergeAction).to have_received(:new).with(expected_params)
         expect(merge_action).to have_received(:perform)
       end
+
+      describe 'custom role contact access' do
+        def link_custom_role(permissions)
+          account.enable_features!(:custom_roles)
+          agent.account_users.find_by!(account: account).update!(
+            custom_role: create(:custom_role, account: account, permissions: permissions)
+          )
+        end
+
+        it 'denies the merge without contact_manage' do
+          link_custom_role(['report_manage'])
+
+          post "/api/v1/accounts/#{account.id}/actions/contact_merge",
+               params: { base_contact_id: base_contact.id, mergee_contact_id: mergee_contact.id },
+               headers: agent.create_new_auth_token,
+               as: :json
+
+          expect(response).to have_http_status(:unauthorized)
+          expect(merge_action).not_to have_received(:perform)
+        end
+
+        it 'allows the merge with contact_manage' do
+          link_custom_role(['contact_manage'])
+
+          post "/api/v1/accounts/#{account.id}/actions/contact_merge",
+               params: { base_contact_id: base_contact.id, mergee_contact_id: mergee_contact.id },
+               headers: agent.create_new_auth_token,
+               as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(merge_action).to have_received(:perform)
+        end
+      end
     end
   end
 end

@@ -58,6 +58,7 @@ class Account < ApplicationRecord
 
   store_accessor :settings, :audio_transcriptions, :auto_resolve_label, :auto_translate, :translation_provider
   store_accessor :settings, :captain_models, :captain_features, :captain_auto_resolve_mode
+  store_accessor :settings, :captain_custom_models
   store_accessor :settings, :reporting_timezone
   store_accessor :settings, :keep_pending_on_bot_failure
   store_accessor :settings, :enforce_mfa
@@ -66,8 +67,10 @@ class Account < ApplicationRecord
   has_many :account_users, dependent: :destroy_async
   has_many :agent_bot_inboxes, dependent: :destroy_async
   has_many :agent_bots, dependent: :destroy_async
+  has_many :agent_capacity_policies, dependent: :destroy_async
   has_many :api_channels, dependent: :destroy_async, class_name: '::Channel::Api'
   has_many :articles, dependent: :destroy_async, class_name: '::Article'
+  has_many :applied_slas, dependent: :destroy_async
   has_many :assignment_policies, dependent: :destroy_async
   has_many :automation_rules, dependent: :destroy_async
   has_many :automation_rule_pending_executions, dependent: :delete_all
@@ -81,6 +84,7 @@ class Account < ApplicationRecord
   has_many :csat_survey_responses, dependent: :destroy_async
   has_many :custom_attribute_definitions, dependent: :destroy_async
   has_many :custom_filters, dependent: :destroy_async
+  has_many :custom_roles, dependent: :delete_all
   has_many :dashboard_apps, dependent: :destroy_async
   has_many :data_imports, dependent: :destroy_async
   has_many :data_exports, dependent: :destroy
@@ -100,6 +104,7 @@ class Account < ApplicationRecord
   has_many :notifications, dependent: :destroy_async
   has_many :portals, dependent: :destroy_async, class_name: '::Portal'
   has_many :sms_channels, dependent: :destroy_async, class_name: '::Channel::Sms'
+  has_many :sla_policies, dependent: :destroy_async
   has_many :teams, dependent: :destroy_async
   has_many :telegram_channels, dependent: :destroy_async, class_name: '::Channel::Telegram'
   has_many :twilio_sms, dependent: :destroy_async, class_name: '::Channel::TwilioSms'
@@ -117,7 +122,6 @@ class Account < ApplicationRecord
 
   scope :with_auto_resolve, -> { where("(settings ->> 'auto_resolve_after')::int IS NOT NULL") }
 
-  before_validation :validate_limit_keys
   after_create_commit :notify_creation
   after_update_commit :clear_unread_conversation_counts_cache, if: :saved_change_to_feature_conversation_unread_counts?
   after_update :resume_delayed_automations, if: -> { saved_change_to_feature_delayed_automations? && feature_delayed_automations? }
@@ -141,12 +145,7 @@ class Account < ApplicationRecord
                              .map { |tagging| tagging.tag.name }
   end
 
-  def webhook_data
-    {
-      id: id,
-      name: name
-    }
-  end
+  def webhook_data = { id: id, name: name }
 
   def suspension_history
     internal_attributes['suspensions'] || []
@@ -217,10 +216,6 @@ class Account < ApplicationRecord
 
   trigger.name('camp_dpid_before_insert').after(:insert).for_each(:row) do
     "execute format('create sequence IF NOT EXISTS camp_dpid_seq_%s', NEW.id);"
-  end
-
-  def validate_limit_keys
-    # method overridden in enterprise module
   end
 
   def validate_reporting_timezone

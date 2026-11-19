@@ -422,4 +422,32 @@ RSpec.describe Api::V2::Accounts::ReportsController, type: :request do
       end
     end
   end
+
+  describe 'report access for custom roles' do
+    before { account.enable_features!(:custom_roles) }
+
+    it 'allows summary reports with report_manage' do
+      agent.account_users.find_by!(account: account).update!(
+        custom_role: create(:custom_role, account: account, permissions: ['report_manage'])
+      )
+
+      get "/api/v2/accounts/#{account.id}/reports/summary",
+          params: { type: 'account', since: 7.days.ago.to_i.to_s, until: Time.current.to_i.to_s },
+          headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'denies summary reports without report_manage' do
+      agent.account_users.find_by!(account: account).update!(
+        custom_role: create(:custom_role, account: account, permissions: ['contact_manage'])
+      )
+
+      get "/api/v2/accounts/#{account.id}/reports/summary",
+          params: { type: 'account', since: 7.days.ago.to_i.to_s, until: Time.current.to_i.to_s },
+          headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
 end

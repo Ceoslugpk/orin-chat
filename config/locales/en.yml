@@ -97,8 +97,10 @@ en:
       invalid_configuration: 'Provide a valid Bandwidth account ID, application ID, client ID, and client secret.'
       authentication_failed: 'Unable to authenticate with Bandwidth. Check your client ID and client secret, then try again.'
     account_saml_settings:
+      configuration_missing: Provide a metadata URL or the IdP SSO URL, entity ID and certificate
       invalid_certificate: must be a valid X.509 certificate in PEM format
       metadata_url:
+        missing: is required to refresh metadata
         invalid_url: must be a valid HTTPS URL
         blocked_address: points to an address that cannot be reached. Use a public host name for your identity provider
         http_error: returned an error. Check that it is the metadata URL from your identity provider
@@ -110,6 +112,17 @@ en:
     account_user:
       no_work_preference: Receive conversations or Receive voice calls must stay on
       invalid_work_preference: Receive conversations and Receive voice calls must be true or false
+      custom_role:
+        missing: does not exist
+        account_mismatch: must belong to the membership account
+        agent_only: can only be linked to an agent; clear it before changing the built-in role
+    sla_policy:
+      at_least_one_threshold: must include at least one response or resolution time threshold
+    conversation:
+      required_attributes_missing: Fill the required conversation attributes before resolving.
+      merge_same_conversation: Select a different conversation to merge
+      merge_account_mismatch: Conversations must belong to the same account
+      merge_contact_mismatch: Only conversations with the same contact can be merged
     account:
       not_authorized: You are not authorized to access this account
       email_limit_exceeded: The daily email limit for this account has been reached
@@ -352,6 +365,16 @@ en:
       labels: Labels
       conversation_link: Link to the Conversation
       breached_events: Breached Events
+    audit_logs:
+      headers:
+        timestamp: Timestamp
+        actor: Actor
+        action: Action
+        record_type: Record Type
+        record_id: Record ID
+        changes: Changes
+        ip_address: IP Address
+        location: Location
     default_group_by: day
     csat:
       headers:
@@ -444,6 +467,7 @@ en:
       sla:
         added: '%{user_name} added SLA policy %{sla_name}'
         removed: '%{user_name} removed SLA policy %{sla_name}'
+      merged: 'Conversation #%{source_id} was merged by %{user_name}'
       linear:
         issue_created: 'Linear issue %{issue_id} was created by %{user_name}'
         issue_linked: 'Linear issue %{issue_id} was linked by %{user_name}'
@@ -1140,11 +1164,11 @@ en:
       pages:
         general: 'General'
         internal: 'Internal'
-        internal_description: 'Keys and switches used by Chatwoot Cloud'
+        internal_description: 'Internal installation settings.'
       configure: 'Configure'
-      enterprise_badge: 'EE'
+      enterprise_badge: 'Planned'
       included: 'Included'
-      locked: 'Locked'
+      locked: 'Coming soon'
       installation_identifier_description: 'Unique ID of this installation.'
       default_description: 'Instance-wide options'
       description: 'Update your instance settings'
@@ -1153,7 +1177,7 @@ en:
       need_help: 'Need help?'
       need_help_description: 'Do you face any issues? We are here to help.'
       community_support: 'Community Support'
-      switch_to_enterprise: 'Switch to Enterprise edition'
+      switch_to_enterprise: 'Not available yet'
     users:
       impersonate: 'Impersonate user'
       copy_impersonation_link: 'Copy link'

@@ -4,6 +4,7 @@ json.display_type resource.inbox.csat_config.try(:[], 'display_type') || 'emoji'
 json.content resource.inbox.csat_config.try(:[], 'message')
 json.inbox_avatar_url resource.inbox.avatar_url
 json.inbox_name resource.inbox.name
+json.disable_branding resource.account.branding_disabled?
 json.locale resource.account.locale
 json.conversation_id resource.conversation_id
 json.created_at resource.created_at

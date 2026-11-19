@@ -558,7 +558,11 @@
       "COPILOT": {
         "TITLE": "Co-pilot",
         "DESCRIPTION": "Provides real-time contextual suggestions, knowledge base recommendations, and proactive insights during conversations."
-      }
+      },
+      "CUSTOM_MODEL_TOGGLE": "カスタムモデル",
+      "CUSTOM_MODEL_PLACEHOLDER": "カスタムモデル ID を入力してください",
+      "CUSTOM_MODEL_APPLY": "適用",
+      "CUSTOM_MODEL_CANCEL": "キャンセル"
     },
     "FEATURES": {
       "TITLE": "機能",

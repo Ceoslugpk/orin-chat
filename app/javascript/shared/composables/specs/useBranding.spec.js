@@ -34,7 +34,7 @@ describe('useBranding', () => {
     it('should replace multiple occurrences of "Chatwoot"', () => {
       const { replaceInstallationName } = useBranding();
       const result = replaceInstallationName(
-        'Chatwoot is great! Use Chatwoot today.'
+        'Chatwoot is great! Use Orin Chat today.'
       );
 
       expect(result).toBe('MyCompany is great! Use MyCompany today.');

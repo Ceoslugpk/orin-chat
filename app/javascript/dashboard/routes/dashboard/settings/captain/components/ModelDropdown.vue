@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useCaptainConfigStore } from 'dashboard/store/captain/preferences';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 import DropdownBody from 'dashboard/components-next/dropdown-menu/base/DropdownBody.vue';
 import DropdownItem from 'dashboard/components-next/dropdown-menu/base/DropdownItem.vue';
 import { provideDropdownContext } from 'dashboard/components-next/dropdown-menu/base/provider.js';
@@ -15,8 +17,15 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['change']);
+const emit = defineEmits(['change', 'applyCustomModel', 'removeCustomModel']);
 const { isOnChatwootCloud } = useAccount();
+
+const inferProvider = modelId => {
+  const name = (modelId || '').toLowerCase();
+  if (name.startsWith('claude')) return 'anthropic';
+  if (name.startsWith('gemini')) return 'gemini';
+  return 'openai';
+};
 
 const PROVIDER_ICONS = {
   openai: 'i-ri-openai-fill',
@@ -36,6 +45,12 @@ const isOpen = ref(false);
 const availableModels = computed(() =>
   captainConfigStore.getModelsForFeature(props.featureKey)
 );
+
+const savedCustomModelIds = computed(
+  () => new Set(captainConfigStore.getCustomModels.map(model => model.id))
+);
+
+const isSavedCustomModel = model => savedCustomModelIds.value.has(model.id);
 
 const recommendedModelId = computed(() =>
   captainConfigStore.getDefaultModelForFeature(props.featureKey)
@@ -64,6 +79,16 @@ const selectedModelDetails = computed(() => {
   );
 });
 
+const showCustomModelInput = ref(false);
+const customModelDraft = ref('');
+
+const toggleCustomInput = () => {
+  showCustomModelInput.value = !showCustomModelInput.value;
+  if (showCustomModelInput.value) {
+    customModelDraft.value = '';
+  }
+};
+
 const getCreditLabel = model => {
   const multiplier = model.credit_multiplier || 1;
   return t('CAPTAIN_SETTINGS.MODEL_CONFIG.CREDITS_PER_MESSAGE', {
@@ -90,6 +115,25 @@ const selectModel = model => {
   emit('change', { feature: props.featureKey, model: model.id });
   closeDropdown();
 };
+
+const applyCustomModel = () => {
+  const customModel = customModelDraft.value?.trim();
+  if (!customModel) return;
+  const provider = inferProvider(customModel);
+  selectedModelId.value = customModel;
+  emit('applyCustomModel', {
+    feature: props.featureKey,
+    id: customModel,
+    provider,
+  });
+  showCustomModelInput.value = false;
+  customModelDraft.value = '';
+  closeDropdown();
+};
+
+const removeCustomModel = model => {
+  emit('removeCustomModel', { id: model.id, provider: model.provider });
+};
 </script>
 
 <template>
@@ -113,39 +157,107 @@ const selectModel = model => {
     </button>
     <DropdownBody
       v-if="isOpen"
-      class="absolute right-0 top-full mt-1 min-w-64 z-50 max-h-96 [&>ul]:max-h-96 [&>ul]:overflow-y-scroll"
+      class="absolute right-0 top-full mt-1 min-w-72 z-50 max-h-96 [&>ul]:max-h-96 [&>ul]:overflow-y-scroll"
     >
+      <li
+        class="n-dropdown-item border-b border-n-weak pb-2 mb-2"
+        @mousedown.prevent
+      >
+        <button
+          type="button"
+          class="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-sm text-n-slate-11 hover:text-n-slate-12"
+          @click="toggleCustomInput"
+        >
+          <span>{{
+            t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_TOGGLE')
+          }}</span>
+          <Icon
+            :icon="
+              showCustomModelInput
+                ? 'i-lucide-chevron-up'
+                : 'i-lucide-chevron-down'
+            "
+            class="size-4"
+          />
+        </button>
+        <div v-if="showCustomModelInput" class="px-2 pt-1">
+          <Input
+            v-model="customModelDraft"
+            size="sm"
+            :placeholder="
+              t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_PLACEHOLDER')
+            "
+            @keyup.enter.stop="applyCustomModel"
+          />
+          <div class="flex justify-end gap-2 mt-2">
+            <Button
+              slate
+              link
+              size="xs"
+              :label="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_CANCEL')"
+              @click.stop="showCustomModelInput = false"
+            />
+            <Button
+              blue
+              size="xs"
+              :label="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_APPLY')"
+              :disabled="!customModelDraft.trim()"
+              @click.stop="applyCustomModel"
+            />
+          </div>
+        </div>
+      </li>
       <DropdownItem
         v-for="model in availableModels"
         :key="model.id"
-        :click="() => selectModel(model)"
         class="rounded-lg dark:hover:bg-n-solid-3 hover:bg-n-alpha-1"
         :class="{
           'dark:bg-n-solid-3 bg-n-alpha-1': selectedModelId === model.id,
-          'pointer-events-none opacity-60': model.coming_soon,
+          'opacity-60': model.coming_soon,
         }"
       >
-        <div class="flex gap-2 w-full">
-          <Icon :icon="iconForModel(model)" class="size-4 flex-shrink-0" />
-          <div class="flex flex-col w-full text-left gap-1">
-            <div
-              class="text-sm w-full font-medium leading-none text-n-slate-12 flex items-baseline justify-between"
-            >
-              {{ model.display_name }}
-              <span
-                v-if="model.id === recommendedModelId"
-                class="text-[10px] uppercase text-n-iris-11 border border-1 border-n-iris-10 leading-none rounded-lg px-1 py-0.5"
+        <div class="flex items-center gap-2 w-full">
+          <button
+            type="button"
+            class="flex flex-1 gap-2 items-center text-left"
+            :class="{ 'pointer-events-none': model.coming_soon }"
+            :disabled="model.coming_soon"
+            @click="selectModel(model)"
+          >
+            <Icon :icon="iconForModel(model)" class="size-4 flex-shrink-0" />
+            <div class="flex flex-col w-full text-left gap-1">
+              <div
+                class="text-sm w-full font-medium leading-none text-n-slate-12 flex items-baseline justify-between"
               >
-                {{ t('GENERAL.PREFERRED') }}
+                {{ model.display_name }}
+                <span
+                  v-if="model.id === recommendedModelId"
+                  class="text-[10px] uppercase text-n-iris-11 border border-1 border-n-iris-10 leading-none rounded-lg px-1 py-0.5"
+                >
+                  {{ t('GENERAL.PREFERRED') }}
+                </span>
+              </div>
+              <span v-if="model.coming_soon" class="text-xs text-n-slate-11">
+                {{ t('CAPTAIN_SETTINGS.MODEL_CONFIG.COMING_SOON') }}
+              </span>
+              <span
+                v-else-if="isOnChatwootCloud"
+                class="text-xs text-n-slate-11"
+              >
+                {{ getCreditLabel(model) }}
               </span>
             </div>
-            <span v-if="model.coming_soon" class="text-xs text-n-slate-11">
-              {{ t('CAPTAIN_SETTINGS.MODEL_CONFIG.COMING_SOON') }}
-            </span>
-            <span v-else-if="isOnChatwootCloud" class="text-xs text-n-slate-11">
-              {{ getCreditLabel(model) }}
-            </span>
-          </div>
+          </button>
+          <button
+            v-if="isSavedCustomModel(model)"
+            type="button"
+            class="flex-shrink-0 text-n-slate-10 hover:text-n-ruby-11"
+            :title="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_REMOVE')"
+            :aria-label="t('CAPTAIN_SETTINGS.MODEL_CONFIG.CUSTOM_MODEL_REMOVE')"
+            @click="removeCustomModel(model)"
+          >
+            <Icon icon="i-lucide-trash-2" class="size-4" />
+          </button>
         </div>
       </DropdownItem>
     </DropdownBody>

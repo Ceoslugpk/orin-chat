@@ -454,4 +454,27 @@ describe('ActionCableConnector - Copilot Tests', () => {
       expect(mockDispatch).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('account.permissions_changed', () => {
+    it('reloads the page to discard cached data', () => {
+      const originalLocation = window.location;
+      const reload = vi.fn();
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { ...originalLocation, reload },
+      });
+
+      actionCable.onReceived({
+        event: 'account.permissions_changed',
+        data: { account_id: 1 },
+      });
+
+      expect(reload).toHaveBeenCalledOnce();
+
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: originalLocation,
+      });
+    });
+  });
 });

@@ -5,7 +5,6 @@ import { useMapGetter } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import Avatar from 'next/avatar/Avatar.vue';
 import SidebarProfileMenuStatus from './SidebarProfileMenuStatus.vue';
-import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { isVoiceCallEnabled } from 'dashboard/helper/inbox';
 
 import {
@@ -32,38 +31,10 @@ const { t } = useI18n();
 const currentUser = useMapGetter('getCurrentUser');
 const currentUserAvailability = useMapGetter('getCurrentUserAvailability');
 const inboxes = useMapGetter('inboxes/getInboxes');
-const accountId = useMapGetter('getCurrentAccountId');
-const globalConfig = useMapGetter('globalConfig/get');
-const isFeatureEnabledonAccount = useMapGetter(
-  'accounts/isFeatureEnabledonAccount'
-);
-
 const hasVoiceInbox = computed(() => inboxes.value.some(isVoiceCallEnabled));
-
-const showChatSupport = computed(() => {
-  return (
-    isFeatureEnabledonAccount.value(
-      accountId.value,
-      FEATURE_FLAGS.CONTACT_CHATWOOT_SUPPORT_TEAM
-    ) && globalConfig.value.chatwootInboxToken
-  );
-});
-
-const toggleChatSupport = () => {
-  if (window.$chatwoot) {
-    window.$chatwoot.toggle();
-  }
-};
 
 const menuItems = computed(() => {
   return [
-    {
-      show: showChatSupport.value,
-      showOnCustomBrandedInstance: false,
-      label: t('SIDEBAR_ITEMS.CONTACT_SUPPORT'),
-      icon: 'i-lucide-life-buoy',
-      click: toggleChatSupport,
-    },
     {
       show: true,
       showOnCustomBrandedInstance: true,
@@ -92,7 +63,7 @@ const menuItems = computed(() => {
       showOnCustomBrandedInstance: false,
       label: t('SIDEBAR_ITEMS.DOCS'),
       icon: 'i-lucide-book',
-      link: 'https://www.chatwoot.com/hc/user-guide/en',
+      link: 'https://github.com/Ceoslugpk/orin-chat',
       nativeLink: true,
       target: '_blank',
     },
@@ -101,7 +72,7 @@ const menuItems = computed(() => {
       showOnCustomBrandedInstance: false,
       label: t('SIDEBAR_ITEMS.CHANGELOG'),
       icon: 'i-lucide-scroll-text',
-      link: 'https://www.chatwoot.com/changelog/',
+      link: 'https://github.com/Ceoslugpk/orin-chat/releases',
       nativeLink: true,
       target: '_blank',
     },

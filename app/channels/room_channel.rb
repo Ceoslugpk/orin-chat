@@ -19,16 +19,34 @@ class RoomChannel < ApplicationCable::Channel
   def broadcast_presence
     return if @current_account.blank?
 
-    data = { account_id: @current_account.id, users: ::OnlineStatusTracker.get_available_users(@current_account.id) }
-    if @current_user.is_a? User
-      data[:contacts] = ::OnlineStatusTracker.get_available_contacts(@current_account.id)
-      data[:work_preferences] = work_preferences
+    membership = current_account_user
+    data = { account_id: @current_account.id, users: available_users(membership) }
+    if @current_user.is_a?(User) && membership.present?
+      data[:contacts] = ::OnlineStatusTracker.get_available_contacts(@current_account.id) if membership.contact_access?
+      data[:work_preferences] = membership.slice(:accepts_conversations, :accepts_calls)
     end
     ActionCable.server.broadcast(pubsub_token, { event: 'presence.update', data: data })
   end
 
-  def work_preferences
-    @current_user.account_users.find_by!(account_id: @current_account.id).slice(:accepts_conversations, :accepts_calls)
+  def available_users(membership)
+    users = ::OnlineStatusTracker.get_available_users(@current_account.id)
+    return users unless @current_user.is_a?(User)
+    return {} if membership.blank?
+    return users unless membership.uses_custom_role_permissions?
+
+    users.slice(*visible_user_ids.map(&:to_s))
+  end
+
+  def visible_user_ids
+    inbox_ids = @current_user.inboxes.where(account_id: @current_account.id).pluck(:id)
+    member_ids = InboxMember.where(inbox_id: inbox_ids).pluck(:user_id)
+    (member_ids + @current_account.administrators.pluck(:id) + [@current_user.id]).uniq
+  end
+
+  def current_account_user
+    return unless @current_user.is_a?(User)
+
+    @current_user.account_users.find_by(account_id: @current_account.id)
   end
 
   def ensure_stream

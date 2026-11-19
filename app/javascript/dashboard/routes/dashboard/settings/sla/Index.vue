@@ -2,7 +2,7 @@
 import AddSLA from './AddSLA.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import BaseSettingsHeader from 'dashboard/routes/dashboard/settings/components/BaseSettingsHeader.vue';
-import SLAPaywallEnterprise from './SLAPaywallEnterprise.vue';
+import SLAUnavailable from './SLAUnavailable.vue';
 import {
   BaseTable,
   BaseTableRow,
@@ -22,7 +22,7 @@ export default {
     AddSLA,
     SettingsLayout,
     BaseSettingsHeader,
-    SLAPaywallEnterprise,
+    SLAUnavailable,
     BaseTable,
     BaseTableRow,
     BaseTableCell,
@@ -41,10 +41,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isOnChatwootCloud: 'globalConfig/isOnChatwootCloud',
       isFeatureEnabledonAccount: 'accounts/isFeatureEnabledonAccount',
       records: 'sla/getSLA',
-      currentUser: 'getCurrentUser',
       accountId: 'getCurrentAccountId',
       uiFlags: 'sla/getUIFlags',
     }),
@@ -59,9 +57,6 @@ export default {
     },
     isBehindAPaywall() {
       return !this.isFeatureEnabledonAccount(this.accountId, 'sla');
-    },
-    isSuperAdmin() {
-      return this.currentUser.type === 'SuperAdmin';
     },
     tableHeaders() {
       return [
@@ -126,12 +121,6 @@ export default {
       if (!time) return '-';
       return `${time}${unit}`;
     },
-    onClickCTA() {
-      this.$router.push({
-        name: 'billing_settings_index',
-        params: { accountId: this.accountId },
-      });
-    },
   },
 };
 </script>
@@ -167,12 +156,7 @@ export default {
       </BaseSettingsHeader>
     </template>
     <template #body>
-      <SLAPaywallEnterprise
-        v-if="isBehindAPaywall"
-        :is-super-admin="isSuperAdmin"
-        :is-on-chatwoot-cloud="isOnChatwootCloud"
-        @upgrade="onClickCTA"
-      />
+      <SLAUnavailable v-if="isBehindAPaywall" />
       <BaseTable
         v-else
         :headers="tableHeaders"

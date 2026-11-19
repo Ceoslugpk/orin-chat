@@ -3,6 +3,16 @@ module AccountSettingsSchema
 
   CAPTAIN_MODEL_PROPERTIES = Llm::Models.model_feature_keys.index_with { { 'type': %w[string null] } }.freeze
   CAPTAIN_FEATURE_PROPERTIES = Llm::Models.feature_keys.index_with { { 'type': %w[boolean null] } }.freeze
+  CAPTAIN_CUSTOM_MODEL_SCHEMA = {
+    'type': 'object',
+    'properties': {
+      'id': { 'type': 'string' },
+      'display_name': { 'type': %w[string null] },
+      'provider': { 'type': 'string' }
+    },
+    'required': %w[id provider],
+    'additionalProperties': false
+  }.freeze
 
   SETTINGS_PARAMS_SCHEMA = {
     'type': 'object',
@@ -15,6 +25,7 @@ module AccountSettingsSchema
         'auto_translate': { 'type': %w[boolean null] },
         'translation_provider': { 'type': %w[string null], 'enum': ['captain', 'google_translate', nil] },
         'auto_resolve_label': { 'type': %w[string null] },
+        'disable_branding': { 'type': %w[boolean null] },
         'enforce_mfa': { 'type': %w[boolean null] },
         'keep_pending_on_bot_failure': { 'type': %w[boolean null] },
         'captain_auto_resolve_mode': { 'type': %w[string null], 'enum': ['evaluated', 'legacy', 'disabled', nil] },
@@ -27,6 +38,10 @@ module AccountSettingsSchema
           'properties': CAPTAIN_MODEL_PROPERTIES,
           'additionalProperties': false
         },
+        'captain_custom_models': {
+          'type': %w[array null],
+          'items': CAPTAIN_CUSTOM_MODEL_SCHEMA
+        },
         'captain_features': {
           'type': %w[object null],
           'properties': CAPTAIN_FEATURE_PROPERTIES,
@@ -36,4 +51,11 @@ module AccountSettingsSchema
     'required': [],
     'additionalProperties': true
   }.to_json.freeze
+
+  def branding_disabled?
+    value = settings.to_h['disable_branding']
+    return true if value.nil?
+
+    ActiveModel::Type::Boolean.new.cast(value)
+  end
 end

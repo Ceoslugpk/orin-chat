@@ -773,6 +773,329 @@
         }
       }
     },
+    "/api/v1/accounts/{account_id}/custom_roles": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/account_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Custom Roles"
+        ],
+        "operationId": "get-account-custom-roles",
+        "summary": "List all custom roles in an account",
+        "description": "Get all custom role definitions in an account, sorted by name and ID",
+        "security": [
+          {
+            "userBearerAuth": []
+          },
+          {
+            "userApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "Array of all custom role definitions",
+                  "items": {
+                    "$ref": "#/components/schemas/custom_role"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Custom Roles"
+        ],
+        "operationId": "create-custom-role",
+        "summary": "Create a custom role",
+        "description": "Create a custom role definition in the account",
+        "security": [
+          {
+            "userBearerAuth": []
+          },
+          {
+            "userApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/custom_role_create_update_payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/custom_role"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid custom role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{account_id}/custom_roles/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/account_id"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "schema": {
+            "type": "integer"
+          },
+          "description": "ID of the custom role",
+          "required": true
+        }
+      ],
+      "get": {
+        "tags": [
+          "Custom Roles"
+        ],
+        "operationId": "get-custom-role",
+        "summary": "Get a custom role",
+        "description": "Get a custom role definition from the account",
+        "security": [
+          {
+            "userBearerAuth": []
+          },
+          {
+            "userApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "The ID of the custom role"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/custom_role"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Custom role not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Custom Roles"
+        ],
+        "operationId": "update-custom-role",
+        "summary": "Update a custom role",
+        "description": "Update a custom role definition in the account",
+        "security": [
+          {
+            "userBearerAuth": []
+          },
+          {
+            "userApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "The ID of the custom role"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/custom_role_create_update_payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/custom_role"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Custom role not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid custom role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Custom Roles"
+        ],
+        "operationId": "delete-custom-role",
+        "summary": "Delete a custom role",
+        "description": "Delete an unreferenced custom role definition from the account",
+        "security": [
+          {
+            "userBearerAuth": []
+          },
+          {
+            "userApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "The ID of the custom role"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Custom role not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Custom role is assigned to an agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bad_request_error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/accounts/{account_id}/canned_responses": {
       "parameters": [
         {
@@ -10419,6 +10742,38 @@
           }
         }
       },
+      "custom_role": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The ID of the custom role"
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the custom role"
+          },
+          "description": {
+            "type": "string",
+            "description": "The purpose of the custom role"
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Permission keys granted to agents holding this role",
+            "items": {
+              "type": "string",
+              "enum": [
+                "conversation_manage",
+                "conversation_unassigned_manage",
+                "conversation_participating_manage",
+                "contact_manage",
+                "report_manage",
+                "knowledge_base_manage"
+              ]
+            }
+          }
+        }
+      },
       "inbox": {
         "type": "object",
         "properties": {
@@ -12174,6 +12529,49 @@
           }
         }
       },
+      "custom_role_create_update_payload": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "permissions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "The display name of the custom role",
+            "example": "Support agent"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "The purpose of the custom role",
+            "example": "Handles unassigned conversations in assigned inboxes"
+          },
+          "permissions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Permission keys granted to agents holding this role",
+            "items": {
+              "type": "string",
+              "enum": [
+                "conversation_manage",
+                "conversation_unassigned_manage",
+                "conversation_participating_manage",
+                "contact_manage",
+                "report_manage",
+                "knowledge_base_manage"
+              ]
+            },
+            "example": [
+              "conversation_unassigned_manage"
+            ]
+          }
+        }
+      },
       "agent_create_payload": {
         "type": "object",
         "required": [
@@ -12215,6 +12613,14 @@
             "type": "boolean",
             "description": "Whether the agent is automatically marked offline when they are away.",
             "example": true
+          },
+          "custom_role_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Optional account-owned custom role definition. Only agent roles can hold a custom role.",
+            "example": 1
           }
         }
       },
@@ -12247,6 +12653,14 @@
             "type": "boolean",
             "description": "Whether the agent is automatically marked offline when they are away.",
             "example": true
+          },
+          "custom_role_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Account-owned custom role definition for the agent. Omit to keep the current reference; send null to clear it.",
+            "example": 1
           }
         }
       },
@@ -16675,6 +17089,10 @@
       "description": "Agent management APIs"
     },
     {
+      "name": "Custom Roles",
+      "description": "Custom role definition management APIs"
+    },
+    {
       "name": "Campaigns",
       "description": "Create, schedule, and manage campaigns. Requires an account administrator and API access enabled for the account."
     },
@@ -16767,6 +17185,7 @@
         "Account AgentBots",
         "Account",
         "Agents",
+        "Custom Roles",
         "Audit Logs",
         "Campaigns",
         "Canned Responses",

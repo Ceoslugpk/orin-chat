@@ -397,6 +397,19 @@ RSpec.describe Captain::BaseTaskService do
         expect(service.send(:api_key)).to be_nil
       end
     end
+
+    context 'when a custom OpenAI-compatible endpoint is configured without a key' do
+      before do
+        InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_API_KEY')&.destroy
+        InstallationConfig.find_or_initialize_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT').update!(value: 'http://localhost:11434')
+        service.instance_variable_set(:@api_key, nil)
+        service.instance_variable_set(:@llm_credentials, nil)
+      end
+
+      it 'allows the request to proceed without a system API key' do
+        expect(service.send(:api_key_configured?)).to be(true)
+      end
+    end
   end
 
   describe '#prompt_from_file' do

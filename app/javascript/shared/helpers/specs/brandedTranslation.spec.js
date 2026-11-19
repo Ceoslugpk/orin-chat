@@ -12,6 +12,12 @@ describe('brandTranslatedText', () => {
     ).toBe('Login to Orin Chat. Orin Chat is ready.');
   });
 
+  it('replaces the Orin Chat product name for white-labelled installations', () => {
+    expect(brandTranslatedText('Orin Chat is ready.', 'Acme')).toBe(
+      'Acme is ready.'
+    );
+  });
+
   it('keeps lowercase identifiers and URLs intact', () => {
     expect(
       brandTranslatedText(

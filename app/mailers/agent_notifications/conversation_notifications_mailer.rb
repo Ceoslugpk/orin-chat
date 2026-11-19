@@ -55,7 +55,30 @@ class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
     send_mail_with_liquid(to: @agent.email, subject: subject) and return
   end
 
+  def sla_missed_first_response(conversation, agent, _user)
+    sla_missed_notification(conversation, agent, 'first response')
+  end
+
+  def sla_missed_next_response(conversation, agent, _user)
+    sla_missed_notification(conversation, agent, 'next response')
+  end
+
+  def sla_missed_resolution(conversation, agent, _user)
+    sla_missed_notification(conversation, agent, 'resolution time')
+  end
+
   private
+
+  def sla_missed_notification(conversation, agent, sla_name)
+    return unless smtp_config_set_or_development?
+
+    @agent = agent
+    @conversation = conversation
+    @sla_policy = conversation.applied_sla&.sla_policy
+    subject = "#{@agent.available_name}, SLA #{sla_name} missed for conversation [ID - #{@conversation.display_id}]"
+    @action_url = app_account_conversation_url(account_id: @conversation.account_id, id: @conversation.display_id)
+    send_mail_with_liquid(to: @agent.email, subject: subject) and return
+  end
 
   def liquid_locals
     super.merge({ notification_settings_url: "#{app_account_url(@conversation.account_id)}/profile/settings" })
@@ -66,7 +89,8 @@ class AgentNotifications::ConversationNotificationsMailer < ApplicationMailer
                   user: @agent,
                   conversation: @conversation,
                   inbox: @conversation.inbox,
-                  message: @message
+                  message: @message,
+                  sla_policy: @sla_policy
                 })
   end
 end

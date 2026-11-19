@@ -1,0 +1,36 @@
+tags:
+  - Custom Roles
+operationId: delete-custom-role
+summary: Delete a custom role
+description: Delete an unreferenced custom role definition from the account
+security:
+  - userBearerAuth: []
+  - userApiKey: []
+parameters:
+  - in: path
+    name: id
+    schema:
+      type: integer
+    required: true
+    description: The ID of the custom role
+responses:
+  '200':
+    description: Success
+  '403':
+    description: Access denied
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'
+  '404':
+    description: Custom role not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'
+  '422':
+    description: Custom role is assigned to an agent
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/bad_request_error'

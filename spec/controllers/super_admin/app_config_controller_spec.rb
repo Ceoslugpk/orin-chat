@@ -20,6 +20,13 @@ RSpec.describe 'Super Admin Application Config API', type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include(config.value)
       end
+
+      it 'shows installation branding settings' do
+        sign_in(super_admin, scope: :super_admin)
+        get '/super_admin/app_config?config=branding'
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include('BRAND_NAME', 'INSTALLATION_NAME', 'LOGO_THUMBNAIL')
+      end
     end
   end
 
@@ -55,6 +62,25 @@ RSpec.describe 'Super Admin Application Config API', type: :request do
         expect(flash[:success]).to be_present
         expect(flash[:alert]).to be_blank
         expect(flash[:notice]).to be_blank
+      end
+
+      it 'updates provider-specific captain credentials' do
+        sign_in(super_admin, scope: :super_admin)
+        post '/super_admin/app_config?config=captain', params: {
+          app_config: {
+            CAPTAIN_ANTHROPIC_API_KEY: 'anthropic-key',
+            CAPTAIN_ANTHROPIC_ENDPOINT: 'https://api.anthropic.com',
+            CAPTAIN_GEMINI_API_KEY: 'gemini-key',
+            CAPTAIN_GEMINI_ENDPOINT: 'https://generativelanguage.googleapis.com'
+          }
+        }
+
+        expect(response).to have_http_status(:found)
+        expect(response).to redirect_to(super_admin_app_config_path(config: 'captain'))
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_ANTHROPIC_API_KEY').value).to eq('anthropic-key')
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_ANTHROPIC_ENDPOINT').value).to eq('https://api.anthropic.com')
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_GEMINI_API_KEY').value).to eq('gemini-key')
+        expect(InstallationConfig.find_by(name: 'CAPTAIN_GEMINI_ENDPOINT').value).to eq('https://generativelanguage.googleapis.com')
       end
 
       it 'rejects invalid Shopify Partner configuration before persisting any submitted value' do

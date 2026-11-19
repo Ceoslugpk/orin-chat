@@ -110,17 +110,17 @@ class ActionCableListener < BaseListener
 
   def contact_created(event)
     contact, account = extract_contact_and_account(event)
-    broadcast(account, [account_token(account)], CONTACT_CREATED, contact.push_event_data)
+    broadcast(account, contact_event_tokens(account), CONTACT_CREATED, contact.push_event_data)
   end
 
   def contact_updated(event)
     contact, account = extract_contact_and_account(event)
-    broadcast(account, [account_token(account)], CONTACT_UPDATED, contact.push_event_data)
+    broadcast(account, contact_event_tokens(account), CONTACT_UPDATED, contact.push_event_data)
   end
 
   def contact_merged(event)
     contact, account = extract_contact_and_account(event)
-    broadcast(account, [account_token(account)], CONTACT_MERGED, contact.push_event_data)
+    broadcast(account, contact_event_tokens(account), CONTACT_MERGED, contact.push_event_data)
   end
 
   def contact_deleted(event)
@@ -128,7 +128,7 @@ class ActionCableListener < BaseListener
     account = Account.find_by(id: contact_data[:account_id])
     return if account.blank?
 
-    broadcast(account, [account_token(account)], CONTACT_DELETED, contact_data)
+    broadcast(account, contact_event_tokens(account), CONTACT_DELETED, contact_data)
   end
 
   def conversation_mentioned(event)
@@ -144,10 +144,6 @@ class ActionCableListener < BaseListener
     conversation, account = extract_conversation_and_account(event)
 
     broadcast(account, user_tokens(account, conversation.inbox.members), event_name, conversation.push_event_data.merge(metadata))
-  end
-
-  def account_token(account)
-    "account_#{account.id}"
   end
 
   def broadcast_message_event(message, event_name, **extra)
@@ -237,4 +233,5 @@ class ActionCableListener < BaseListener
   end
 end
 
+ActionCableListener.include(ActionCableListener::PermissionEvents)
 ActionCableListener.prepend_mod_with('ActionCableListener')

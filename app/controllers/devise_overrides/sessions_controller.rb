@@ -2,6 +2,7 @@ class DeviseOverrides::SessionsController < DeviseTokenAuth::SessionsController
   include MfaAuthenticationHelper
   include DeviceVerificationGuard
   include ImpersonationLogging
+  include SignInAuditing
 
   # Prevent session parameter from being passed
   # Unpermitted parameter: session
@@ -27,7 +28,10 @@ class DeviseOverrides::SessionsController < DeviseTokenAuth::SessionsController
   end
 
   def render_create_success
-    track_user_session unless @impersonation
+    unless @impersonation
+      track_user_session
+      record_session_audit(@resource, 'sign_in')
+    end
     if @backup_codes.present?
       render 'devise_overrides/sessions/create_with_backup_codes', formats: [:json]
     else

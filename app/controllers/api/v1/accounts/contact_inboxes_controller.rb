@@ -1,5 +1,6 @@
 class Api::V1::Accounts::ContactInboxesController < Api::V1::Accounts::BaseController
   before_action :ensure_inbox
+  before_action :authorize_contact_access
 
   def filter
     contact_inbox = @inbox.contact_inboxes.where(inbox_id: permitted_params[:inbox_id], source_id: permitted_params[:source_id])
@@ -9,6 +10,10 @@ class Api::V1::Accounts::ContactInboxesController < Api::V1::Accounts::BaseContr
   end
 
   private
+
+  def authorize_contact_access
+    authorize Contact, :show?
+  end
 
   def ensure_inbox
     @inbox = Current.account.inboxes.find(permitted_params[:inbox_id])

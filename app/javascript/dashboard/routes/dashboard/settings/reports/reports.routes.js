@@ -38,6 +38,11 @@ const monitorsMeta = {
   installationTypes: [INSTALLATION_TYPES.ENTERPRISE, INSTALLATION_TYPES.CLOUD],
 };
 
+const slaReportsMeta = {
+  ...meta,
+  featureFlag: FEATURE_FLAGS.SLA,
+};
+
 const oldReportRoutes = [
   {
     path: 'agent',
@@ -158,7 +163,7 @@ export default {
         {
           path: 'sla',
           name: 'sla_reports',
-          meta,
+          meta: slaReportsMeta,
           component: SLAReports,
         },
         {
